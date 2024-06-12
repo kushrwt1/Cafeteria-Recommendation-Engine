@@ -1,4 +1,4 @@
-import { db } from '../Utils/database';
+import { db } from '../Database/database';
 import { MenuItem } from '../Models/menuItem';
 
 export class AdminController {

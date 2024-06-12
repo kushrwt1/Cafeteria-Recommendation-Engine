@@ -1,25 +1,21 @@
+"use strict";
 // import { AuthenticationService } from '../services/authenticationService';
 // import { AdminController } from '../Controllers/adminController';
 // import { ChefController } from '../Controllers/chefController';
 // import { UserController } from '../Controllers/userController';
 // import {RoleBasedMenu} from '../features/RoleBasedMenus/roleBasedMenu'
 // import { createInterface } from 'readline';
-
 // const readline = createInterface({
 //     input: process.stdin,
 //     output: process.stdout
 // });
-
 // let roleBasedMenuObject = new RoleBasedMenu();
-
 // async function main() {
 //     const authService = new AuthenticationService();
 //     const adminController = new AdminController();
 //     const chefController = new ChefController();
 //     const userController = new UserController();
-
 //     console.log("Welcome to the Cafeteria Recommendation Engine");
-
 //     readline.question('Enter your ID: ', async (idStr) => {
 //         const id = parseInt(idStr);
 //         readline.question('Enter your name: ', async (name) => {
@@ -40,5 +36,4 @@
 //         });
 //     });
 // }
-
 // main();

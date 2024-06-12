@@ -1,4 +1,4 @@
-import { db } from '../Utils/database';
+import { db } from '../Database/database';
 
 export class ChefController {
     

@@ -1,4 +1,4 @@
-import { db } from '../Utils/database';
+import { db } from '../Database/database';
 
 export class UserController {
     public async giveFeedback(userId: number, itemId: number, rating: number, comment: string): Promise<void> {
@@ -14,6 +14,6 @@ export class UserController {
     }
 
     public async sendSelectedMenuItems() {
-        
+
     }
 }
