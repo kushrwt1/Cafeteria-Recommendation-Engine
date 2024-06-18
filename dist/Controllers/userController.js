@@ -9,14 +9,25 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const userRepository_1 = require("../Utils/Database Repositories/userRepository");
-(() => __awaiter(void 0, void 0, void 0, function* () {
-    const userRepository = new userRepository_1.UserRepository();
-    try {
-        const users = yield userRepository.getAllUsers();
-        console.log('All Users:', users);
+exports.UserController = void 0;
+const database_1 = require("../Database/database");
+class UserController {
+    giveFeedback(userId, itemId, rating, comment) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield database_1.db.execute('INSERT INTO feedback (user_id, item_id, rating, comment) VALUES (?, ?, ?, ?)', [userId, itemId, rating, comment]);
+        });
     }
-    catch (error) {
-        console.error('Error fetching users:', error);
+    getNotification() {
+        return __awaiter(this, void 0, void 0, function* () {
+        });
     }
-}))();
+    selectMenuItems() {
+        return __awaiter(this, void 0, void 0, function* () {
+        });
+    }
+    sendSelectedMenuItems() {
+        return __awaiter(this, void 0, void 0, function* () {
+        });
+    }
+}
+exports.UserController = UserController;

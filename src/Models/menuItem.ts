@@ -1,6 +1,7 @@
 export interface MenuItem {
-    id: number;
+    menu_item_id: number;
     name: string;
-    price: number;
     availability: boolean;
+    price: number;
+    meal_type_id: number | null;
 }

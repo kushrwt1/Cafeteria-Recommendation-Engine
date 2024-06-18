@@ -19,10 +19,12 @@ export class ChefController {
 
     }
 
-    public async rollOutMenu(items: number[]): Promise<void> {
-        // Logic to roll out menu items for the next day
-        // Example implementation, adapt as necessary
-        await db.execute('INSERT INTO rolled_out_menu (item_id) VALUES ?', [items.map(item => [item])]);
+    public async rollOutMenu(menuItemIds: number[]) {
+        try {
+            await db.execute('INSERT INTO Daily_Menu (menu_item_id, date) VALUES ?', [menuItemIds.map(id => [id, new Date()])]);
+        } catch (error) {
+            console.error(`Error rolling out menu: ${error}`);
+        }
     }
 
 

@@ -1,4 +1,4 @@
-import { UserRepository } from '../Repositories/userRepository';
+import { UserRepository } from '../Utils/Database Repositories/userRepository';
 
 (async () => {
     const userRepository = new UserRepository();
