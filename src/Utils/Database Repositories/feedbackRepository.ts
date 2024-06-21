@@ -21,9 +21,10 @@ export class FeedbackRepository {
 
     public async addFeedback(feedback: Feedback): Promise<void> {
         try {
+            const date = new Date(feedback.date).toISOString().split('T')[0];
             await db.execute(
-                'INSERT INTO Feedback (comment, rating, menu_item_id, user_id) VALUES (?, ?, ?, ?)',
-                [feedback.comment, feedback.rating, feedback.menu_item_id, feedback.user_id]
+                'INSERT INTO Feedback (comment, rating, menu_item_id, user_id, date) VALUES (?, ?, ?, ?, ?)',
+                [feedback.comment, feedback.rating, feedback.menu_item_id, feedback.user_id, feedback.date]
             );
         } catch (error) {
             console.error(`Error adding feedback: ${error instanceof Error ? error.message : error}`);
@@ -32,7 +33,8 @@ export class FeedbackRepository {
     }
 
     public async updateFeedback(feedback: Feedback): Promise<void> {
-        await db.execute('UPDATE Feedback SET comment = ?, rating = ?, menu_item_id = ?, user_id = ? WHERE id = ?', [feedback.comment, feedback.rating, feedback.menu_item_id, feedback.user_id, feedback.id]);
+        await db.execute('UPDATE Feedback SET comment = ?, rating = ?, menu_item_id = ?, user_id = ?, date = ? WHERE id = ?', 
+        [feedback.comment, feedback.rating, feedback.menu_item_id, feedback.user_id, feedback.date, feedback.id]);
     }
 
     public async deleteFeedback(id: number): Promise<void> {

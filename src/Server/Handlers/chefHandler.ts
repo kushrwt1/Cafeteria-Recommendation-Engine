@@ -1,47 +1,57 @@
-// import net from 'net';
-// import { User } from '../../Models/user';
-
-// export async function handleChef(socket: net.Socket, user: User) {
-//     try {
-//         socket.write('Welcome Chef\n');
-//         socket.on('data', (data) => {
-//             try {
-//                 const message = data.toString().trim();
-//                 // Handle chef commands
-//                 socket.write(`Chef command received: ${message}\n`);
-//             } catch (error) {
-//                 console.error(`Chef handler error: ${error}`);
-//                 socket.write(`ERROR ${error}\n`);
-//             }
-//         });
-//     } catch (error) {
-//         console.error(`Error in handleChef: ${error}`);
-//         socket.write(`ERROR ${error}\n`);
-//     }
-// }
-
 import net from 'net';
 import { ChefController } from '../../Controllers/chefController';
-import { RoleBasedMenu } from '../../Features/RoleBasedMenus/roleBasedMenu';
+import { NotificationService } from '../../Services/notificationService';
 
-export function handleChef(socket: net.Socket) {
-    const chefController = new ChefController();
-    // const roleBasedMenu = new RoleBasedMenu();
+export class ChefHandler {
+    private notificationService = new NotificationService();
 
-    try {
-        socket.write('Welcome Chef\n');
-        // roleBasedMenu.chefMenu(chefController);
-    } catch (error) {
-        handleError(error, socket, 'Error in chef handler');
-    }
-}
+    public handleChef(socket: net.Socket, command: string, params: string[]) {
+        const chefController = new ChefController();
+        let response: string;
 
-function handleError(error: unknown, socket: net.Socket, context: string) {
-    if (error instanceof Error) {
-        console.error(`${context}: ${error.message}`);
-        socket.write(`ERROR ${error.message}\n`);
-    } else {
-        console.error(`${context}: ${error}`);
-        socket.write(`ERROR ${error}\n`);
+        switch (command) {
+            case 'chef_getRecommendedItems':
+                chefController.getRecommendedItems(socket);
+                // const recommendedItems = await chefController.getRecommendedItems();
+                break;
+            case 'chef_rollOutMenu':
+                const [dateStr, selectedItemsStr] = params;
+                const date = new Date(dateStr).toISOString().split('T')[0];
+                const selectedItems = JSON.parse(selectedItemsStr);
+
+                for (const { mealType, menuItemId } of selectedItems) {
+                    chefController.rollOutMenu(date, menuItemId);
+                }
+                
+                const today = new Date().toISOString().split('T')[0];
+                this.notificationService.addNotificationForAllUsers("See Rolled Out Menu and Vote For an Item", today);
+                break;
+            case 'chef_viewAllMenuItem':
+                chefController.viewAllMenuItems(socket);
+                break;
+            // case 'admin_updateMenuItem':
+            //     const [menuItemIdStr, newNameStr, newPriceStr, newAvailabilityStr, newMealTypeIdStr] = params;
+            //     const menuItemId = parseInt(menuItemIdStr);
+            //     const newName = newNameStr.toString();
+            //     const newPrice = parseFloat(newPriceStr);
+            //     const newAvailability = newAvailabilityStr === 'true';
+            //     const newMealTypeId = parseInt(newMealTypeIdStr);
+            //     adminController.updateMenuItem({ menu_item_id: menuItemId, name: newName, availability: newAvailability, price: newPrice, meal_type_id: newMealTypeId});
+            //     break;
+            // case  'admin_deleteMenuItem':
+            //     const [menuItemIdToDeleteStr] = params;
+            //     const menuItemIdToDelete = parseInt(menuItemIdToDeleteStr);
+            //     adminController.deleteMenuItem(menuItemIdToDelete);
+            //     break;
+            // case  'admin_viewAllMenuItem':
+            //     adminController.viewAllMenuItems(socket);
+            //     // socket.write(`Response_viewAllMenuItems;${menuItems}`);
+            //     break;
+            default:
+                response = 'Unknown admin command';
+                break;
+        }
+
+        // socket.write(response + '\n');
     }
 }

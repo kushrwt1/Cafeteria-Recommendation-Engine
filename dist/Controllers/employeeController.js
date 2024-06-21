@@ -9,21 +9,71 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UserController = void 0;
-const database_1 = require("../Database/database");
-class UserController {
-    giveFeedback(userId, itemId, rating, comment) {
+exports.EmployeeController = void 0;
+const feedbackRepository_1 = require("../Utils/Database Repositories/feedbackRepository");
+const notificationService_1 = require("../Services/notificationService");
+const chefDailyMenuRepository_1 = require("../Utils/Database Repositories/chefDailyMenuRepository");
+const employeeMenuSelectionRepository_1 = require("../Utils/Database Repositories/employeeMenuSelectionRepository");
+class EmployeeController {
+    constructor() {
+        this.feedbackRepositoryObject = new feedbackRepository_1.FeedbackRepository();
+        this.chefdailyMenuRepositoryObject = new chefDailyMenuRepository_1.ChefDailyMenuRepository();
+        this.notificationServiceObject = new notificationService_1.NotificationService();
+        this.employeeMenuSelectionrepositoryObject = new employeeMenuSelectionRepository_1.EmployeeMenuSelectionRepository();
+    }
+    giveFeedback(userId, menuItemId, rating, comment, date) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                yield database_1.db.execute('INSERT INTO Feedback (comment, rating, menu_item_id, user_id) VALUES (?, ?, ?, ?)', [comment, rating, itemId, userId]);
+                const feedback = {
+                    id: 0,
+                    user_id: userId,
+                    menu_item_id: menuItemId,
+                    rating: rating,
+                    comment: comment,
+                    date: date
+                };
+                yield this.feedbackRepositoryObject.addFeedback(feedback);
+                console.log("Feedback added successfully.");
             }
             catch (error) {
-                console.error(`Error submitting feedback: ${error}`);
+                console.error(`Error adding feedback: ${error}`);
             }
         });
     }
-    getNotification() {
+    getNotifications(socket, userId) {
         return __awaiter(this, void 0, void 0, function* () {
+            const notifications = yield this.notificationServiceObject.getNotificationsByUserId(userId);
+            // socket.write(JSON.stringify(notifications));
+            socket.write(`Response_viewNotifications;${JSON.stringify(notifications)};${userId}`);
+        });
+    }
+    getRolledOutMenu(socket, notificationId, userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const rolledOutMenu = yield this.chefdailyMenuRepositoryObject.getTodaysRolledOutMenu();
+            // socket.write(JSON.stringify(notifications));
+            socket.write(`Response_rolledOutMenu;${JSON.stringify(rolledOutMenu)};${userId};${notificationId}`);
+        });
+    }
+    markNotificationAsSeen(notificationId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.notificationServiceObject.markNotificationAsSeen(notificationId);
+        });
+    }
+    updateVotedItem(itemId, userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const today = new Date().toISOString().split('T')[0];
+            const userMenuSelection = {
+                id: 0,
+                user_id: userId,
+                menu_item_id: itemId,
+                selection_date: today
+            };
+            yield this.employeeMenuSelectionrepositoryObject.addEmployeeMenuSelection(userMenuSelection);
+        });
+    }
+    deleteNotification(notificationId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.notificationServiceObject.deleteNotification(notificationId);
         });
     }
     selectMenuItems() {
@@ -35,4 +85,4 @@ class UserController {
         });
     }
 }
-exports.UserController = UserController;
+exports.EmployeeController = EmployeeController;

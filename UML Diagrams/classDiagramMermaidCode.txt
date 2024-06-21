@@ -1,0 +1,263 @@
+classDiagram
+    direction TB
+
+    class Client {
+        -client: net.socket
+        -rl: readline.Interface
+        -roleBasedMenuObject: RoleBasedMenu 
+        +setUpclientct(): void
+        +askquestion(): Promise<string>
+        +login(): void
+    }
+
+    class RoleBasedMenu {
+        -client: net.socket
+        -rl: readline.Interface
+        -askquestion(): Promise<string>
+        +adminMenu(): void
+        -addMenuItem(): void
+        -updateMenuItem(): void
+        -deleteMenuItem(): void
+        -viewAllMenuItems(): void
+        +chefMenu(): void
+        -getRecommendedItems(): void
+        -rollOutMenu(): void
+        -updateFinalMenu(): void
+        -viewAllMenuItemsForChef(): void
+        +employeeMenu(userId: number): void
+    }
+
+    class Server {
+        -userRepository: UserRepository
+        -roleRepository: RoleRepository
+        +startServer(): void
+        +handleLogin(): void
+    }
+
+    class AdminHandler {
+        +handleAdmin(): void
+    }
+
+    class ChefHandler {
+        +handleChef(): void
+    }
+
+    class EmployeeHandler {
+        +handleEmployee(): void
+    }
+
+    class AdminController {
+        menuItemRepositoryObject: MenuItemRepository
+        +addMenuItem(menuItem: MenuItem): Promise<void>
+        +updateMenuItem(menuItem: MenuItem): Promise<void>
+        +deleteMenuItem(menuItemId: number): Promise<void>
+        +viewAllMenuItems(socket: net.socket): void
+    }
+
+    class ChefController {
+        menuItemRepositoryObject: MenuItemRepository
+        feedbackRepositoryObject: FeedbackRepository
+        ChefDailyMenuRepositoryObject: ChefDailyMenuRepository
+        +getRecommendedItems(): Promise<MenuItem[]>
+        +rollOutMenu(dailyMenu: ChefDailyMenus): Promise<void>
+        +updateNextDayMenu(selectedItems: MenuItem[]): Promise<void>
+        +generateMonthlyReports(): Promise<Report[]>
+        +viewAllMenuItems(): Promise<MenuItem[]>
+    }
+
+    class EmployeeController {
+        +selectMenuItems(menuItems: MenuItem[]): Promise<void>
+    }
+
+    class FeedbackRepository {
+        +getAllFeedback(): Promise<Feedback[]>
+        +getFeedbackById(id: number): Promise<Feedback | null>
+        +addFeedback(feedback: Feedback): Promise<void>
+        +updateFeedback(feedback: Feedback): Promise<void>
+        +deleteFeedback(id: number): Promise<void>
+    }
+
+    class ChefDailyMenuRepository {
+        +addDailyMenu(dailyMenu: ChefDailyMenus): Promise<void>
+        +getAllDailyMenus(dailyMenu: ChefDailyMenus): Promise<void>
+        +getDailyMenuById(dailyMenu: ChefDailyMenus): Promise<void>
+        +updateDailyMenu(dailyMenu: ChefDailyMenus): Promise<void>
+        +deleteDailyMenu(dailyMenu: ChefDailyMenus): Promise<void>
+    }
+
+    class EmployeeMenuSelectionRepository {
+        +getAllEmployeeMenuSelections(): Promise<void>
+        +getEmployeeMenuSelectionById(id: number): Promise<void>
+        +addEmployeeMenuSelection(userMenuSelection: EmployeeMenuSelections)
+        +updateEmployeeMenuSelection(userMenuSelection: EmployeeMenuSelections)
+        +deleteEmployeeMenuSelection(userMenuSelection: EmployeeMenuSelections)
+    }
+
+    class MealTypeRepository {
+        +getAllMealTypes(): Promise<MealType[]>
+        +getMealTypeById(id: number): Promise<MealType[]>
+        +addMealType(mealType: MealType): Promise<void>
+        +updateMealType(mealType: MealType): Promise<void>
+        +updateMealType(mealType: MealType): Promise<void>
+        +deleteMealType(id: number)
+    }
+
+    class MenuItemRepository {
+        +getAllMenuItems(): Promise<MenuItem[]>
+        +getMenuItemById(id: number): Promise<MenuItem | null>
+        +addMenuItem(menuItem: MenuItem): Promise<void>
+        +updateMenuItem(menuItem: MenuItem): Promise<void>
+        +deleteMenuItem(id: number): Promise<void>
+    }
+
+    class NotificationRepository {
+        +getAllNotifications(): Promise<Notification[]>
+        +getNotificationById(id: number): Promise<Notification[]>
+        +addNotification(notification: Notification): Promise<void>
+        +updateNotification(notification: Notification): Promise<void>
+        +deleteNotification(notification: Notification): Promise<void>
+    }
+
+    class RoleRepository {
+        +getAllRoles(): Promise<Role[]>
+        +getRoleById(role_id: number): Promise<Role[]>
+        +addRole(role: Role): Promise<void>
+        +updateRole(role: Role): Promise<void>
+        +deleteRole(role: Role): Promise<void>
+    }
+
+    class UserRepository {
+        +getUserByNameAndPassword(): Promise<User[]>
+        +getAllUsers(): Promise<User[]>
+        +getUserById(id: number): Promise<User | null>
+        +addUser(user: User): Promise<void>
+        +updateUser(user: User): Promise<void>
+        +deleteUser(id: number): Promise<void>
+    }
+
+    class AuthenticationService {
+        +authenticate(username: string, password: string): Promise<User | null>
+    }
+
+    class FeedbackService {
+        +provideFeedback(feedback: Feedback): Promise<void>
+    }
+
+    class NotificationService {
+        +sendNotification(notification: Notification): Promise<void>
+    }
+
+    class RecommendationService {
+        +getRecommendations(): Promise<MenuItem[]>
+    }
+
+    class Database {
+        +configure(): void
+        +connect(): void
+    }
+
+    class User {    
+        +user_id: number
+        +name: string
+        +password: string
+        +role_id: number
+    }
+
+    class Feedback {
+        +id: number
+        +comment: string
+        +rating: number
+        +menu_item_id: number
+        +user_id: number
+        +date: string
+    }
+
+    class ChefDailyMenus {
+        +id: number
+        +menu_item_id: number
+        +date: string
+    }
+
+    class MenuSelection {
+        +id: number
+        +menu_item_id: number
+        +user_id: number
+        +selection_date: string
+    }
+
+    class MealType {
+        +id: number
+        +type: string
+    }
+
+    class MenuItem {
+        +menu_item_id: number
+        +name: string
+        +availability: boolean
+        +price: number
+        +meal_type_id: number
+    }
+
+    class Notification {
+        +id: number
+        +message: string
+        +user_id: number
+    }
+
+    class Role {
+        +role_id: number
+        +role_name: string
+    }
+
+    Client --|> RoleBasedMenu : uses
+    Client --|> Server : sends requests to
+    Server --|> AdminHandler : dispatches requests
+    Server --|> ChefHandler : dispatches requests
+    Server --|> EmployeeHandler : dispatches requests
+
+    AdminHandler --|> AdminController : handles
+    ChefHandler --|> ChefController : handles
+    EmployeeHandler --|> EmployeeController : handles
+
+    AdminController --|> MenuItemRepository : uses
+    ChefController --|> MenuItemRepository : uses
+    ChefController --|> ChefDailyMenuRepository : uses
+    EmployeeController --|> EmployeeMenuSelectionRepository : uses
+    EmployeeController --|> MenuItemRepository : uses
+
+    AuthenticationService --|> UserRepository : uses
+    FeedbackService --|> FeedbackRepository : uses
+    NotificationService --|> NotificationRepository : uses
+    RecommendationService --|> FeedbackRepository : uses
+    RecommendationService --|> MenuItemRepository : uses
+
+    FeedbackRepository --|> Database : interacts with
+    ChefDailyMenuRepository --|> Database : interacts with
+    EmployeeMenuSelectionRepository --|> Database : interacts with
+    MealTypeRepository --|> Database : interacts with
+    MenuItemRepository --|> Database : interacts with
+    NotificationRepository --|> Database : interacts with
+    RoleRepository --|> Database : interacts with
+    UserRepository --|> Database : interacts with
+
+    AdminController --|> Feedback : handles
+    ChefController --|> Feedback : handles
+    EmployeeController --|> Feedback : handles
+
+    FeedbackRepository --|> Feedback : manages
+    ChefDailyMenuRepository --|> ChefDailyMenus : manages
+    EmployeeMenuSelectionRepository --|> MenuSelection : manages
+    MealTypeRepository --|> MealType : manages
+    MenuItemRepository --|> MenuItem : manages
+    NotificationRepository --|> Notification : manages
+    RoleRepository --|> Role : manages
+    UserRepository --|> User : manages
+
+    User --|> Role : belongs to
+    MenuItem --|> MealType : belongs to
+    Feedback --|> MenuItem : about
+    Feedback --|> User : given by
+    ChefDailyMenus --|> MenuItem : includes
+    MenuSelection --|> MenuItem : selects
+    MenuSelection --|> User : made by
+    Notification --|> User : sent to

@@ -49,7 +49,7 @@ class AdminController {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const menuItems = yield this.menuItemRepositoryObject.getAllMenuItems();
-                console.log("Menu Items:", menuItems);
+                // console.log("Menu Items:", menuItems);
                 socket.write(`Response_viewAllMenuItems;${JSON.stringify(menuItems)}`);
             }
             catch (error) {

@@ -4,4 +4,5 @@ export interface Feedback {
     rating: number;
     menu_item_id: number;
     user_id: number;
+    date: string;
 }
