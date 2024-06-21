@@ -1,0 +1,77 @@
+CREATE DATABASE cafeteria_database; 
+USE cafeteria_database; 
+ 
+-- Roles Table 
+CREATE TABLE Roles ( 
+    role_id BIGINT AUTO_INCREMENT PRIMARY KEY, 
+    role_name VARCHAR(255) UNIQUE NOT NULL 
+); 
+
+
+-- Users Table 
+CREATE TABLE Users ( 
+    user_id BIGINT AUTO_INCREMENT PRIMARY KEY, 
+    name VARCHAR(255) NOT NULL, 
+    password VARCHAR(255) NOT NULL, 
+    role_id BIGINT, 
+    FOREIGN KEY (role_id) REFERENCES Roles(role_id) ON DELETE SET NULL ON UPDATE CASCADE 
+);
+
+
+-- Meal Types Table 
+CREATE TABLE Meal_Types ( 
+    id INT AUTO_INCREMENT PRIMARY KEY, 
+    meal_name VARCHAR(255) NOT NULL 
+); 
+
+
+-- Menu Item Table 
+CREATE TABLE Menu_Items ( 
+    menu_item_id BIGINT AUTO_INCREMENT PRIMARY KEY, 
+    name VARCHAR(255) NOT NULL, 
+    availability BOOLEAN NOT NULL DEFAULT TRUE, 
+    price DECIMAL(10, 2) NOT NULL, 
+    meal_type_id INT, 
+    FOREIGN KEY (meal_type_id) REFERENCES Meal_Types(id) ON DELETE CASCADE ON UPDATE CASCADE 
+); 
+
+
+-- Chef Daily Menus Table 
+CREATE TABLE Chef_Daily_Menus ( 
+    id BIGINT AUTO_INCREMENT PRIMARY KEY, 
+    menu_item_id BIGINT, 
+    date DATE NOT NULL, 
+    FOREIGN KEY (menu_item_id) REFERENCES Menu_Item(menu_item_id) ON DELETE CASCADE ON UPDATE CASCADE 
+); 
+
+
+-- Employee Menu Selections Table 
+CREATE TABLE Employee_Menu_Selections ( 
+    id BIGINT AUTO_INCREMENT PRIMARY KEY, 
+    user_id BIGINT, 
+    menu_item_id BIGINT, 
+    selection_date DATE NOT NULL, 
+    FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE ON UPDATE CASCADE, 
+    FOREIGN KEY (menu_item_id) REFERENCES Menu_Item(menu_item_id) ON DELETE CASCADE ON UPDATE CASCADE 
+); 
+
+
+-- Notification Table 
+CREATE TABLE Notifications ( 
+    id BIGINT AUTO_INCREMENT PRIMARY KEY, 
+    message VARCHAR(255) NOT NULL, 
+    user_id BIGINT, 
+    FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE ON UPDATE CASCADE 
+); 
+
+
+-- Feedback Table 
+CREATE TABLE Feedback ( 
+    id BIGINT AUTO_INCREMENT PRIMARY KEY, 
+    comment VARCHAR(255) NOT NULL, 
+    rating INT NOT NULL, 
+    menu_item_id BIGINT, 
+    user_id BIGINT, 
+    FOREIGN KEY (menu_item_id) REFERENCES Menu_Item(menu_item_id) ON DELETE CASCADE ON UPDATE CASCADE, 
+    FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE ON UPDATE CASCADE 
+); 
