@@ -13,7 +13,7 @@ class AdminHandler {
                 const price = parseFloat(priceStr);
                 const availability = availabilityStr === 'true';
                 const meal_type_id = parseInt(mealTypeIdStr);
-                adminController.addMenuItem({ menu_item_id: 0, name, availability, price, meal_type_id });
+                adminController.addMenuItem({ menu_item_id: 0, name, availability, price, meal_type_id }, socket);
                 break;
             case 'admin_updateMenuItem':
                 const [menuItemIdStr, newNameStr, newPriceStr, newAvailabilityStr, newMealTypeIdStr] = params;

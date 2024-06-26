@@ -7,9 +7,9 @@ export class AdminController {
 
     private menuItemRepositoryObject = new MenuItemRepository();
     
-    public async addMenuItem(menuItem: {menu_item_id: 0, name: string; availability: boolean; price: number; meal_type_id: number }) {
+    public async addMenuItem(menuItem: {menu_item_id: 0, name: string; availability: boolean; price: number; meal_type_id: number }, socket: net.Socket) {
         try {
-            this.menuItemRepositoryObject.addMenuItem(menuItem);
+            this.menuItemRepositoryObject.addMenuItem(menuItem, socket);
         } catch (error) {
             console.error(`Error adding menu item: ${error}`);
         }

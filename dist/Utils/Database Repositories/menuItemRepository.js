@@ -25,9 +25,10 @@ class MenuItemRepository {
             return menuItems.length > 0 ? menuItems[0] : null;
         });
     }
-    addMenuItem(menuItem) {
+    addMenuItem(menuItem, socket) {
         return __awaiter(this, void 0, void 0, function* () {
             yield database_1.db.execute('INSERT INTO Menu_Items (name, availability, price, meal_type_id) VALUES (?, ?, ?, ?)', [menuItem.name, menuItem.availability, menuItem.price, menuItem.meal_type_id]);
+            socket.write("Menu Item Added Successfully");
             console.log("Menu Item added successfully");
         });
     }

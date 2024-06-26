@@ -153,3 +153,88 @@ class Server {
 }
 
 const serverObject = new Server();
+
+// import net from 'net';
+// import { UserRepository } from '../Utils/Database Repositories/userRepository';
+// import { RoleRepository } from '../Utils/Database Repositories/roleRepository';
+// import { AdminHandler } from '../Server/Handlers/adminHandler';
+// import { ChefHandler } from '../Server/Handlers/chefHandler';
+// import { EmployeeHandler } from '../Server/Handlers/employeeHandler';
+
+// class Server {
+//     private userRepository: UserRepository;
+//     private roleRepository: RoleRepository;
+
+//     constructor() {
+//         this.userRepository = new UserRepository();
+//         this.roleRepository = new RoleRepository();
+//         this.startServer();
+//     }
+
+//     private startServer() {
+//         const server = net.createServer((socket) => {
+//             console.log('Client connected');
+//             const clientAddress = socket.remoteAddress;
+//             console.log(clientAddress);
+//             socket.setEncoding('utf-8');
+
+//             socket.on('data', async (data) => {
+//                 const message = data.toString().trim();
+//                 console.log(message);
+//                 const [command, ...args] = message.split(';');
+//                 console.log(command);
+//                 if (command === 'LOGIN') {
+//                     await this.handleLogin(socket, args);
+//                 } else if (command.startsWith('admin')) {
+//                     const adminHandler = new AdminHandler();
+//                     adminHandler.handleAdmin(socket, command, args);
+//                 } else if (command.startsWith('chef')) {
+//                     const chefHandler = new ChefHandler();
+//                     chefHandler.handleChef(socket, command, args);
+//                 } else if (command.startsWith('employee')) {
+//                     const employeeHandler = new EmployeeHandler();
+//                     employeeHandler.handleEmployee(socket, command, args);
+//                 } else {
+//                     socket.write('ERROR Unknown command\n');
+//                 }
+//             });
+
+//             socket.on('end', () => {
+//                 console.log('Client disconnected');
+//             });
+
+//             socket.on('error', (err) => {
+//                 console.error(`Socket error: ${err.message}`);
+//             });
+//         });
+
+//         // Listen on all interfaces
+//         server.listen(3000, '0.0.0.0', () => {
+//             console.log('Server listening on port 3000');
+//         });
+//     }
+
+//     private async handleLogin(socket: net.Socket, args: string[]) {
+//         const [username, password] = args;
+//         try {
+//             const user = await this.userRepository.getUserByNameAndPassword(username, password);
+//             if (user) {
+//                 const role = await this.roleRepository.getRoleById(user.role_id);
+//                 if (role) {
+//                     // socket.write(`${role.role_name}\n`);
+
+//                     socket.write(`${role.role_name}`);
+//                 } else {
+//                     socket.write('ERROR Role not found\n');
+//                 }
+//             } else {
+//                 socket.write('ERROR Invalid credentials\n');
+//             }
+//         } catch (error) {
+//             console.error(`Error during login: ${error}`);
+//             socket.write(`ERROR ${error}\n`);
+//         }
+//     }
+// }
+
+// const serverObject = new Server();

@@ -15,10 +15,10 @@ class AdminController {
     constructor() {
         this.menuItemRepositoryObject = new menuItemRepository_1.MenuItemRepository();
     }
-    addMenuItem(menuItem) {
+    addMenuItem(menuItem, socket) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
-                this.menuItemRepositoryObject.addMenuItem(menuItem);
+                this.menuItemRepositoryObject.addMenuItem(menuItem, socket);
             }
             catch (error) {
                 console.error(`Error adding menu item: ${error}`);

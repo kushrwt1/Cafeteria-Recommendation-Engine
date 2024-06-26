@@ -1,5 +1,6 @@
 import { db } from '../../Database/database';
 import { MenuItem } from '../../Models/menuItem';
+import net from 'net';
 
 export class MenuItemRepository {
     
@@ -14,8 +15,9 @@ export class MenuItemRepository {
         return menuItems.length > 0 ? menuItems[0] : null;
     }
 
-    public async addMenuItem(menuItem: MenuItem): Promise<void> {
+    public async addMenuItem(menuItem: MenuItem, socket: net.Socket): Promise<void> {
         await db.execute('INSERT INTO Menu_Items (name, availability, price, meal_type_id) VALUES (?, ?, ?, ?)', [menuItem.name, menuItem.availability, menuItem.price, menuItem.meal_type_id]);
+        socket.write("Menu Item Added Successfully");
         console.log("Menu Item added successfully");
     }
 

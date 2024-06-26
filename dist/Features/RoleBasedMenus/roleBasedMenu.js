@@ -235,7 +235,11 @@ class RoleBasedMenu {
                         // this.rl.close();
                         break;
                     case '5':
-                        this.rl.close();
+                        this.viewAllMenuItemsForEmployee(userId);
+                        // this.rl.close();
+                        break;
+                    case '6':
+                        this.logout();
                         break;
                     default:
                         console.log("Invalid option");
@@ -388,6 +392,13 @@ class RoleBasedMenu {
             catch (error) {
                 console.error(`Error voting for today's menu: ${error}`);
             }
+        });
+    }
+    viewAllMenuItemsForEmployee(userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const command = `employee_viewAllMenuItem`;
+            // this.client.write(command);
+            this.client.write(`employee_viewAllMenuItem;${userId}`);
         });
     }
 }

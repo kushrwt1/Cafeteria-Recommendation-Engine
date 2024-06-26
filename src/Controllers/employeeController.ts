@@ -6,6 +6,7 @@ import { ChefDailyMenuRepository } from '../Utils/Database Repositories/chefDail
 import { EmployeeMenuSelectionRepository } from '../Utils/Database Repositories/employeeMenuSelectionRepository';
 import net from 'net';
 import { EmployeeMenuSelections } from '../Models/employeeMenuSelection';
+import { MenuItemRepository } from '../Utils/Database Repositories/menuItemRepository';
 
 export class EmployeeController {
 
@@ -13,6 +14,7 @@ export class EmployeeController {
     private chefdailyMenuRepositoryObject = new ChefDailyMenuRepository();
     private notificationServiceObject = new NotificationService();
     private employeeMenuSelectionrepositoryObject = new EmployeeMenuSelectionRepository();
+    private menuItemRepositoryObject = new MenuItemRepository();
 
     public async giveFeedback(userId: number, menuItemId: number, rating: number, comment: string, date: string) {
         try {
@@ -40,6 +42,7 @@ export class EmployeeController {
 
     public async getRolledOutMenu(socket: net.Socket, notificationId: number, userId: number): Promise<void> {
         const rolledOutMenu = await this.chefdailyMenuRepositoryObject.getTodaysRolledOutMenu();
+
         // socket.write(JSON.stringify(notifications));
         socket.write(`Response_rolledOutMenu;${JSON.stringify(rolledOutMenu)};${userId};${notificationId}`);
     }
@@ -61,6 +64,16 @@ export class EmployeeController {
 
     public async deleteNotification(notificationId: number): Promise<void> {
         await this.notificationServiceObject.deleteNotification(notificationId);
+    }
+
+    public async viewAllMenuItems(socket: net.Socket, userId: number) {
+        try {
+            const menuItems = await this.menuItemRepositoryObject.getAllMenuItems();
+            // console.log("Menu Items:", menuItems);
+            socket.write(`Response_employee_viewAllMenuItems;${JSON.stringify(menuItems)};${userId}`);
+        } catch (error) {
+            console.error(`Error fetching all menu item: ${error}`);
+        }
     }
 
     public async selectMenuItems() {

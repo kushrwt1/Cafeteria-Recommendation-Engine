@@ -51,7 +51,6 @@ export class RecommendationService {
                 const menuItem = await this.menuItemRepositoryObject.getMenuItemById(item.menu_item_id);
                 recommendedItems.push({ ...menuItem, compositeScore: item.compositeScore });
             }
-
             return recommendedItems;
         } catch (error) {
             console.error('Error fetching recommended items:', error);

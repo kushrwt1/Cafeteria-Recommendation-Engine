@@ -194,7 +194,6 @@ export class RoleBasedMenu {
     }
 
     private async updateFinalMenu() {
-
     }
 
     private async viewAllMenuItemsForChef() {
@@ -231,7 +230,11 @@ export class RoleBasedMenu {
                     // this.rl.close();
                     break;
                 case '5':
-                    this.rl.close();
+                    this.viewAllMenuItemsForEmployee(userId);
+                    // this.rl.close();
+                    break;
+                case '6':
+                    this.logout();
                     break;
                 default:
                     console.log("Invalid option");
@@ -313,7 +316,6 @@ export class RoleBasedMenu {
 
         // Send request to server to get notifications
         this.client.write(`employee_viewNotifications;${userId}`);
-        
     }
 
     public async handleNotificationsResponseFromServer(notifications: any, userId: number) {
@@ -394,6 +396,12 @@ export class RoleBasedMenu {
             console.error(`Error voting for today's menu: ${error}`);
         }
         
+    }
+
+    private async viewAllMenuItemsForEmployee(userId: number) {
+        const command = `employee_viewAllMenuItem`;
+        // this.client.write(command);
+        this.client.write(`employee_viewAllMenuItem;${userId}`);
     }
 
 }

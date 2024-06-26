@@ -45,6 +45,12 @@ class EmployeeHandler {
                 const notificationIdToDelete = parseInt(params[0]);
                 employeeController.deleteNotification(notificationIdToDelete);
                 break;
+            case 'employee_viewAllMenuItem':
+                const employeeUserId = parseInt(params[0]);
+                employeeController.viewAllMenuItems(socket, employeeUserId);
+                // const notificationIdToDelete = parseInt(params[0]);
+                // employeeController.deleteNotification(notificationIdToDelete);
+                break;
             default:
                 response = 'Unknown admin command';
                 break;

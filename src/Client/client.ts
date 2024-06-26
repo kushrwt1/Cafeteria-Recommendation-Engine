@@ -117,24 +117,56 @@ class Client {
             } else if (message.includes('Response_viewAllMenuItems')) {
                 const [command, menuItemsStr] = message.split(';');
                 const menuItems = JSON.parse(menuItemsStr);
-                console.log(menuItems);
+                console.table(menuItems);
                 this.roleBasedMenuObject.adminMenu();
             } else if (message.includes('Response_getRecommendedItems')) {
                 const [command, recommendedItemsStr] = message.split(';');
                 const recommendedItems = JSON.parse(recommendedItemsStr);
+                // recommendedItems.forEach((item: { menu_item_id: any; name: any; meal_type_id: any; compositeScore: number; }) => {
+                //     console.log(`ID: ${item.menu_item_id}, Name: ${item.name}, Average Rating: ${item.compositeScore.toFixed(2)}`);
+                // });
+
                 console.log('Recommended Items for Next Day Menu:');
-                recommendedItems.forEach((item: { menu_item_id: any; name: any; compositeScore: number; }) => {
-                    console.log(`ID: ${item.menu_item_id}, Name: ${item.name}, Average Rating: ${item.compositeScore.toFixed(2)}`);
+                console.log('=========================================================================================');
+                const recommendedItemsByMealType: { [key: number]: MealTypeItems } = {
+                    1: { mealType: 'Breakfast', items: [] },
+                    2: { mealType: 'Lunch', items: [] },
+                    3: { mealType: 'Dinner', items: [] }
+                };
+                // Categorize items by meal_type_id
+                recommendedItems.forEach((item: { menu_item_id: number; name: string; meal_type_id: number; compositeScore: number }) => {
+                    if (recommendedItemsByMealType[item.meal_type_id]) {
+                        recommendedItemsByMealType[item.meal_type_id].items.push(item);
+                    }
                 });
+                console.table(recommendedItems);
+                // Print categorized items
+                Object.values(recommendedItemsByMealType).forEach(meal => {
+                    if (meal.items.length > 0) {
+                        console.log(`${meal.mealType}:`);
+                        meal.items.forEach((item: { menu_item_id: number; name: string; compositeScore: number }) => {
+                            console.log(`  ID: ${item.menu_item_id}, Name: ${item.name}, Average Rating: ${item.compositeScore.toFixed(2)}`);
+                        });
+                    }
+                });
+                console.log('=========================================================================================');
                 this.roleBasedMenuObject.chefMenu();
+
             } else if (message.includes('Response_Chef_viewAllMenuItems')) {
                 const [command, menuItemsStr] = message.split(';');
                 const menuItems = JSON.parse(menuItemsStr);
-                console.log(menuItems);
+                console.table(menuItems);
                 this.roleBasedMenuObject.chefMenu();
 
 
-            } else if (message.includes('Response_viewNotifications')) {
+            }else if (message.includes('Response_employee_viewAllMenuItems')) {
+                const [command, menuItemsStr, userIdStr] = message.split(';');
+                const menuItems = JSON.parse(menuItemsStr);
+                const userId = parseInt(userIdStr);
+                console.table(menuItems);
+                this.roleBasedMenuObject.employeeMenu(userId);
+
+            }else if (message.includes('Response_viewNotifications')) {
                 const [command, notificationsStr, userIdStr] = message.split(';');
                 const notifications = JSON.parse(notificationsStr);
                 const userId = parseInt(userIdStr);

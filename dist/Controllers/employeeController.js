@@ -14,12 +14,14 @@ const feedbackRepository_1 = require("../Utils/Database Repositories/feedbackRep
 const notificationService_1 = require("../Services/notificationService");
 const chefDailyMenuRepository_1 = require("../Utils/Database Repositories/chefDailyMenuRepository");
 const employeeMenuSelectionRepository_1 = require("../Utils/Database Repositories/employeeMenuSelectionRepository");
+const menuItemRepository_1 = require("../Utils/Database Repositories/menuItemRepository");
 class EmployeeController {
     constructor() {
         this.feedbackRepositoryObject = new feedbackRepository_1.FeedbackRepository();
         this.chefdailyMenuRepositoryObject = new chefDailyMenuRepository_1.ChefDailyMenuRepository();
         this.notificationServiceObject = new notificationService_1.NotificationService();
         this.employeeMenuSelectionrepositoryObject = new employeeMenuSelectionRepository_1.EmployeeMenuSelectionRepository();
+        this.menuItemRepositoryObject = new menuItemRepository_1.MenuItemRepository();
     }
     giveFeedback(userId, menuItemId, rating, comment, date) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -74,6 +76,18 @@ class EmployeeController {
     deleteNotification(notificationId) {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.notificationServiceObject.deleteNotification(notificationId);
+        });
+    }
+    viewAllMenuItems(socket, userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                const menuItems = yield this.menuItemRepositoryObject.getAllMenuItems();
+                // console.log("Menu Items:", menuItems);
+                socket.write(`Response_employee_viewAllMenuItems;${JSON.stringify(menuItems)};${userId}`);
+            }
+            catch (error) {
+                console.error(`Error fetching all menu item: ${error}`);
+            }
         });
     }
     selectMenuItems() {
