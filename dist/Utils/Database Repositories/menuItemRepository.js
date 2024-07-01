@@ -40,6 +40,7 @@ class MenuItemRepository {
     deleteMenuItem(menu_item_id) {
         return __awaiter(this, void 0, void 0, function* () {
             yield database_1.db.execute('DELETE FROM Menu_Items WHERE menu_item_id = ?', [menu_item_id]);
+            console.log(`Menu Item with Menu Item Id: ${menu_item_id} is deleted from the database`);
         });
     }
 }

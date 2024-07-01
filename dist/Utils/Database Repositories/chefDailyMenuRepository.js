@@ -46,9 +46,11 @@ class ChefDailyMenuRepository {
             // Get today's date in YYYY-MM-DD format
             const today = new Date().toISOString().split('T')[0];
             // Query the database to get the menu for today's date
-            const [rows] = yield database_1.db.execute('SELECT * FROM Chef_Daily_Menus WHERE DATE(date) = ?', [today]);
+            // const [rows] = await db.execute('SELECT * FROM Chef_Daily_Menus WHERE DATE(date) = ?', [today]);
+            const [rows] = yield database_1.db.execute('SELECT cdm.menu_item_id, cdm.date, mi.name, mi.meal_type_id FROM Chef_Daily_Menus cdm JOIN menu_items mi ON cdm.menu_item_id = mi.menu_item_id WHERE cdm.date = ?', [today]);
             // Check if any menu is found
             // return rows as ChefDailyMenus[];
+            // const rolledOutMenu = rows as ChefDailyMenus[];
             const rolledOutMenu = rows;
             return rolledOutMenu.length > 0 ? rolledOutMenu : null;
         });

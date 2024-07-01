@@ -3,5 +3,6 @@ export interface MenuItem {
     name: string;
     availability: boolean;
     price: number;
-    meal_type_id: number | null;
+    // meal_type_id: number | null;
+    meal_type_id: number;
 }

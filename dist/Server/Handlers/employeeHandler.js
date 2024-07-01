@@ -34,12 +34,22 @@ class EmployeeHandler {
                 employeeController.markNotificationAsSeen(notificationIdToMark);
                 break;
             case 'employee_markNotificationAsSeen_updateVotedItem':
-                const [notificationIdToMarkAsSeenStr, itemIdStr, employeeId2Str] = params;
+                const [notificationIdToMarkAsSeenStr, breakfastItemIdStr, lunchItemIdStr, dinnerItemIdStr, employeeId2Str] = params;
                 const notificationIdToMarkAsSeen = parseInt(notificationIdToMarkAsSeenStr);
-                const itemId = parseInt(itemIdStr);
+                const breakfastItemId = parseInt(breakfastItemIdStr);
+                const lunchItemId = parseInt(lunchItemIdStr);
+                const dinnerItemId = parseInt(dinnerItemIdStr);
                 const employeeId2 = parseInt(employeeId2Str);
                 employeeController.markNotificationAsSeen(notificationIdToMarkAsSeen);
-                employeeController.updateVotedItem(itemId, employeeId2);
+                employeeController.updateVotedItem(breakfastItemId, lunchItemId, dinnerItemId, employeeId2);
+                break;
+            case 'employee_markNotificationAsSeen_sendDiscardedItemFeedback':
+                const [employeeId3Str, notificationIdToMarkAsSeen1Str, dislikes, desiredTaste, momRecipe, discardedMenuItemIdStr] = params;
+                const employeeId3 = parseInt(employeeId3Str);
+                const notificationIdToMarkAsSeen1 = parseInt(notificationIdToMarkAsSeen1Str);
+                const discardedMenuItemId = parseInt(discardedMenuItemIdStr);
+                employeeController.markNotificationAsSeen(notificationIdToMarkAsSeen1);
+                employeeController.addDiscarededMenuItemFeedbackInDatabase(dislikes, desiredTaste, momRecipe, discardedMenuItemId);
                 break;
             case 'employee_deleteNotification':
                 const notificationIdToDelete = parseInt(params[0]);

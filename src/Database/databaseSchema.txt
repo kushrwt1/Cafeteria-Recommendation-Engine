@@ -75,3 +75,23 @@ CREATE TABLE Feedback (
     FOREIGN KEY (menu_item_id) REFERENCES Menu_Item(menu_item_id) ON DELETE CASCADE ON UPDATE CASCADE, 
     FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE ON UPDATE CASCADE 
 ); 
+
+-- Discarded Food Item Feedback Table
+CREATE TABLE Discarded_Food_Item_Feedback (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    menu_item_id BIGINT NOT NULL,
+    dislikes TEXT,
+    desired_taste TEXT,
+    mom_recipe TEXT,
+    feedback_date DATE NOT NULL,
+    FOREIGN KEY (menu_item_id) REFERENCES menu_items(menu_item_id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- Discarded Menu Item Table
+CREATE TABLE Discarded_Menu_Item (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    menu_item_id BIGINT NOT NULL,
+    discarded_date DATE NOT NULL,
+    name varchar(255 NOT NULL),
+    FOREIGN KEY (menu_item_id) REFERENCES menu_items(menu_item_id) ON DELETE CASCADE ON UPDATE CASCADE
+);

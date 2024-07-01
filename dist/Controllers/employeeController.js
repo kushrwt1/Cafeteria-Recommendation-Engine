@@ -15,6 +15,7 @@ const notificationService_1 = require("../Services/notificationService");
 const chefDailyMenuRepository_1 = require("../Utils/Database Repositories/chefDailyMenuRepository");
 const employeeMenuSelectionRepository_1 = require("../Utils/Database Repositories/employeeMenuSelectionRepository");
 const menuItemRepository_1 = require("../Utils/Database Repositories/menuItemRepository");
+const discardedFoodItemFeedbackRepository_1 = require("../Utils/Database Repositories/discardedFoodItemFeedbackRepository");
 class EmployeeController {
     constructor() {
         this.feedbackRepositoryObject = new feedbackRepository_1.FeedbackRepository();
@@ -22,6 +23,7 @@ class EmployeeController {
         this.notificationServiceObject = new notificationService_1.NotificationService();
         this.employeeMenuSelectionrepositoryObject = new employeeMenuSelectionRepository_1.EmployeeMenuSelectionRepository();
         this.menuItemRepositoryObject = new menuItemRepository_1.MenuItemRepository();
+        this.discardedFoodItemFeedbackRepositoryObject = new discardedFoodItemFeedbackRepository_1.DiscardedFoodItemFeedbackRepository();
     }
     giveFeedback(userId, menuItemId, rating, comment, date) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -61,16 +63,30 @@ class EmployeeController {
             yield this.notificationServiceObject.markNotificationAsSeen(notificationId);
         });
     }
-    updateVotedItem(itemId, userId) {
+    updateVotedItem(breakfastItemId, lunchItemId, dinnerItemId, userId) {
         return __awaiter(this, void 0, void 0, function* () {
             const today = new Date().toISOString().split('T')[0];
-            const userMenuSelection = {
+            const userMenuSelectionForBreakfast = {
                 id: 0,
                 user_id: userId,
-                menu_item_id: itemId,
+                menu_item_id: breakfastItemId,
                 selection_date: today
             };
-            yield this.employeeMenuSelectionrepositoryObject.addEmployeeMenuSelection(userMenuSelection);
+            const userMenuSelectionForLunch = {
+                id: 0,
+                user_id: userId,
+                menu_item_id: lunchItemId,
+                selection_date: today
+            };
+            const userMenuSelectionForDinner = {
+                id: 0,
+                user_id: userId,
+                menu_item_id: dinnerItemId,
+                selection_date: today
+            };
+            yield this.employeeMenuSelectionrepositoryObject.addEmployeeMenuSelection(userMenuSelectionForBreakfast);
+            yield this.employeeMenuSelectionrepositoryObject.addEmployeeMenuSelection(userMenuSelectionForLunch);
+            yield this.employeeMenuSelectionrepositoryObject.addEmployeeMenuSelection(userMenuSelectionForDinner);
         });
     }
     deleteNotification(notificationId) {
@@ -96,6 +112,20 @@ class EmployeeController {
     }
     sendSelectedMenuItems() {
         return __awaiter(this, void 0, void 0, function* () {
+        });
+    }
+    addDiscarededMenuItemFeedbackInDatabase(dislikes, desiredTaste, momRecipe, discardedMenuItemId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const today = new Date().toISOString().split('T')[0];
+            const discardedFoodItemFeedback = {
+                id: 0,
+                menu_item_id: discardedMenuItemId,
+                dislikes: dislikes,
+                desired_taste: desiredTaste,
+                mom_recipe: momRecipe,
+                feedback_date: today
+            };
+            yield this.discardedFoodItemFeedbackRepositoryObject.addFeedback(discardedFoodItemFeedback);
         });
     }
 }

@@ -52,15 +52,73 @@ class RecommendationService {
                 // Sort by composite score
                 compositeScores.sort((a, b) => b.compositeScore - a.compositeScore);
                 // Fetch menu item details for top-rated items
-                const recommendedItems = [];
+                // const recommendedItems = [];
+                // for (const item of compositeScores) {
+                //     const menuItem = await this.menuItemRepositoryObject.getMenuItemById(item.menu_item_id);
+                //     recommendedItems.push({ ...menuItem, compositeScore: item.compositeScore });
+                // }
+                // return recommendedItems;
+                // Fetch menu item details for top-rated items and categorize them by meal type
+                const recommendedItemsByMealType = {
+                    1: { mealType: 'Breakfast', items: [] },
+                    2: { mealType: 'Lunch', items: [] },
+                    3: { mealType: 'Dinner', items: [] }
+                };
                 for (const item of compositeScores) {
                     const menuItem = yield this.menuItemRepositoryObject.getMenuItemById(item.menu_item_id);
-                    recommendedItems.push(Object.assign(Object.assign({}, menuItem), { compositeScore: item.compositeScore }));
+                    if (menuItem && menuItem.meal_type_id in recommendedItemsByMealType) {
+                        recommendedItemsByMealType[menuItem.meal_type_id].items.push(Object.assign(Object.assign({}, menuItem), { compositeScore: item.compositeScore }));
+                    }
                 }
+                // Get top 5 items for each meal type
+                const recommendedItems = [];
+                for (const mealType in recommendedItemsByMealType) {
+                    const meal = recommendedItemsByMealType[mealType];
+                    meal.items.sort((a, b) => b.compositeScore - a.compositeScore);
+                    recommendedItems.push(...meal.items.slice(0, 5));
+                }
+                // console.log(recommendedItems);
                 return recommendedItems;
             }
             catch (error) {
                 console.error('Error fetching recommended items:', error);
+                throw error;
+            }
+        });
+    }
+    getDiscardedMenuItems() {
+        return __awaiter(this, void 0, void 0, function* () {
+            try {
+                // Fetch all feedback
+                const feedbackData = yield this.feedbackRepositoryObject.getAllFeedback();
+                // Calculate average rating for each menu item
+                const ratingsMap = {};
+                feedbackData.forEach(feedback => {
+                    if (!ratingsMap[feedback.menu_item_id]) {
+                        ratingsMap[feedback.menu_item_id] = { totalRating: 0, count: 0 };
+                    }
+                    ratingsMap[feedback.menu_item_id].totalRating += feedback.rating;
+                    ratingsMap[feedback.menu_item_id].count += 1;
+                });
+                // Calculate average ratings
+                const averageScores = Object.keys(ratingsMap).map(menuItemId => ({
+                    menu_item_id: parseInt(menuItemId),
+                    averageRating: ratingsMap[parseInt(menuItemId)].totalRating / ratingsMap[parseInt(menuItemId)].count
+                }));
+                // Filter items with average rating less than 2
+                const discardedItems = averageScores.filter(item => item.averageRating < 2);
+                // Fetch menu item details for discarded items
+                const discardedMenuItems = [];
+                for (const item of discardedItems) {
+                    const menuItem = yield this.menuItemRepositoryObject.getMenuItemById(item.menu_item_id);
+                    if (menuItem) {
+                        discardedMenuItems.push(Object.assign(Object.assign({}, menuItem), { averageRating: item.averageRating }));
+                    }
+                }
+                return discardedMenuItems;
+            }
+            catch (error) {
+                console.error('Error fetching discarded items:', error);
                 throw error;
             }
         });

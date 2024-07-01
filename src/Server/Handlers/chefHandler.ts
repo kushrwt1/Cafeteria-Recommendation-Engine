@@ -29,24 +29,31 @@ export class ChefHandler {
             case 'chef_viewAllMenuItem':
                 chefController.viewAllMenuItems(socket);
                 break;
-            // case 'admin_updateMenuItem':
-            //     const [menuItemIdStr, newNameStr, newPriceStr, newAvailabilityStr, newMealTypeIdStr] = params;
-            //     const menuItemId = parseInt(menuItemIdStr);
-            //     const newName = newNameStr.toString();
-            //     const newPrice = parseFloat(newPriceStr);
-            //     const newAvailability = newAvailabilityStr === 'true';
-            //     const newMealTypeId = parseInt(newMealTypeIdStr);
-            //     adminController.updateMenuItem({ menu_item_id: menuItemId, name: newName, availability: newAvailability, price: newPrice, meal_type_id: newMealTypeId});
-            //     break;
-            // case  'admin_deleteMenuItem':
-            //     const [menuItemIdToDeleteStr] = params;
-            //     const menuItemIdToDelete = parseInt(menuItemIdToDeleteStr);
-            //     adminController.deleteMenuItem(menuItemIdToDelete);
-            //     break;
-            // case  'admin_viewAllMenuItem':
-            //     adminController.viewAllMenuItems(socket);
-            //     // socket.write(`Response_viewAllMenuItems;${menuItems}`);
-            //     break;
+            case 'chef_viewDiscardedMenuItems':
+                (async () => {
+                    await chefController.addDiscarededMenuItemsInDatabase();
+                    chefController.sendAllDiscardedMenuItemsToClient(socket);
+                })();
+                break;
+
+
+            case 'chef_removeMenuItem':
+                const foodItemId = parseInt(params[0]);
+                chefController.deleteMenuItem(foodItemId);
+                break;
+
+            case 'chef_sendDiscardedItemFeedbackNotification':
+                const menuItemIdToGetFeedback = parseInt(params[0]);
+                const todayDate = new Date().toISOString().split('T')[0];
+                (async () => {
+                    const menuItem = await chefController.getMenuItemById(menuItemIdToGetFeedback);
+                    if(menuItem!= null)
+                        {
+                            this.notificationService.addNotificationForAllUsers(`Give Detailed Feedback On Discarded Menu Item with Menu Item Id and Name as: ${menuItemIdToGetFeedback} > ${menuItem.name}`, todayDate);
+                            console.log("Notification For Getting Detailed feedback is send successfully.");
+                        }
+                })();
+                break;
             default:
                 response = 'Unknown admin command';
                 break;

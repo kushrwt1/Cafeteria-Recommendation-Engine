@@ -27,5 +27,6 @@ export class MenuItemRepository {
 
     public async deleteMenuItem(menu_item_id: number): Promise<void> {
         await db.execute('DELETE FROM Menu_Items WHERE menu_item_id = ?', [menu_item_id]);
+        console.log(`Menu Item with Menu Item Id: ${menu_item_id} is deleted from the database`);
     }
 }

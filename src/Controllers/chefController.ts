@@ -8,11 +8,14 @@ import { ChefDailyMenuRepository } from '../Utils/Database Repositories/chefDail
 import { ChefDailyMenus } from '../Models/chefDailyMenu';
 import { RecommendationService } from '../Services/recommendationService';
 import { NotificationService } from '../Services/notificationService';
+import { DiscardedMenuItemRepository } from '../Utils/Database Repositories/discardedMenuItemRepository';
+import { MenuItem } from '../Models/menuItem';
 
 export class ChefController {
     
     // private feedbackRepositoryObject = new FeedbackRepository();
     private menuItemRepositoryObject = new MenuItemRepository();
+    private discardedMenuItemRepositoryObject = new DiscardedMenuItemRepository();
     private chefDailyMenuRepositoryObject = new ChefDailyMenuRepository();
     private recommendationService!: RecommendationService;
     private notificationService = new NotificationService();
@@ -64,7 +67,8 @@ export class ChefController {
         }
     }
 
-    public async selectItemsFromMenu(){
+    public async selectItemsFromMenu() {
+        
     }
 
     public async makeMenu() {
@@ -76,5 +80,49 @@ export class ChefController {
     
     }
 
+    public async addDiscarededMenuItemsInDatabase() {
+        try {
+            const discardedItems = await this.recommendationService.getDiscardedMenuItems();
+            console.log('Discarded items retrieved from Recommendation Engine succeessfully');
+
+            const currentDate = new Date().toISOString().split('T')[0];
+            // Loop through discarded items and insert each into the Discarded_Menu_Item table
+            for (const item of discardedItems) {
+                await this.discardedMenuItemRepositoryObject.addDiscardedMenuItem({
+                    id: 0, // id will be auto-incremented
+                    menu_item_id: item.menu_item_id,
+                    discarded_date: currentDate,
+                    name: item.name
+                });
+            }
+        } catch (error) {
+            console.error('Error fetching Discarded items and Adding Discarded item into Database:', error);
+            // socket.write(`Error_getRecommendedItems;${error}`);
+            throw error;
+        }
+    }
+
+    public async sendAllDiscardedMenuItemsToClient(socket: net.Socket) {
+        try {
+            const discardedMenuItems = await this.discardedMenuItemRepositoryObject.getAllDiscardedMenuItems();
+            socket.write(`Response_chef_viewDiscardedMenuItems;${JSON.stringify(discardedMenuItems)}`);
+            console.log("Discarded Menu Items Sent To The client Successfully");
+        } catch (error) {
+            console.error(`Error fetching Discarded menu item: ${error}`);
+        }
+    }
+
+    public async deleteMenuItem(menuItemId: number) {
+        try {
+            this.menuItemRepositoryObject.deleteMenuItem(menuItemId);
+        } catch (error) {
+            console.error(`Error deleting menu item: ${error}`);
+        }
+    }
+
+    public async getMenuItemById(menuItemId: number) {
+        const menuItem: MenuItem | null = await this.menuItemRepositoryObject.getMenuItemById(menuItemId);
+        return menuItem;
+    }
 
 }

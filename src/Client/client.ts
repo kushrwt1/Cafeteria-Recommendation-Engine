@@ -79,6 +79,7 @@
 import net from 'net';
 import readline from 'readline';
 import { RoleBasedMenu, showMenu } from '../Features/RoleBasedMenus/roleBasedMenu';
+import { DiscardedMenuItem } from '../Models/discardedMenuItem';
 
 class Client {
     private client!: net.Socket;
@@ -139,7 +140,7 @@ class Client {
                         recommendedItemsByMealType[item.meal_type_id].items.push(item);
                     }
                 });
-                console.table(recommendedItems);
+                // console.table(recommendedItems);
                 // Print categorized items
                 Object.values(recommendedItemsByMealType).forEach(meal => {
                     if (meal.items.length > 0) {
@@ -169,6 +170,7 @@ class Client {
             }else if (message.includes('Response_viewNotifications')) {
                 const [command, notificationsStr, userIdStr] = message.split(';');
                 const notifications = JSON.parse(notificationsStr);
+                
                 const userId = parseInt(userIdStr);
                 this.roleBasedMenuObject.handleNotificationsResponseFromServer(notifications, userId);
                 // console.log(menuItems);
@@ -183,7 +185,50 @@ class Client {
                 // console.log(menuItems);
                 // this.roleBasedMenuObject.chefMenu();
                 // this.roleBasedMenuObject.employeeMenu(userId);
-            } 
+            } else if (message.includes('Response_admin_viewDiscardedMenuItems')) {
+                const [command, discardedMenuItemsStr] = message.split(';');
+                const discardedMenuItems: DiscardedMenuItem[] = JSON.parse(discardedMenuItemsStr);
+                // console.table(discardedMenuItems);
+                console.log("\nDiscarded Menu Items Are:");
+                console.log('=========================================================================================');
+                if (discardedMenuItems.length === 0) {
+                    console.log("No discarded menu items.");
+                } else {
+                console.log('ID\tMenu Item ID\tDiscarded Date\tName');
+                // Print each item
+                discardedMenuItems.forEach(item => {
+                    console.log(`${item.id}\t${item.menu_item_id}\t\t${formatDate(item.discarded_date)}\t${item.name}`);
+                });
+                }
+                console.log('=========================================================================================');
+                function formatDate(dateString: any) {
+                    const date = new Date(dateString);
+                    return date.toISOString().split('T')[0];
+                }
+                this.roleBasedMenuObject.displayMenuForDiscardedItems();
+                
+            }
+            else if (message.includes('Response_chef_viewDiscardedMenuItems')) {
+                const [command, discardedMenuItemsStr] = message.split(';');
+                const discardedMenuItems: DiscardedMenuItem[] = JSON.parse(discardedMenuItemsStr);
+                console.log("\nDiscarded Menu Items Are:");
+                console.log('=========================================================================================');
+                if (discardedMenuItems.length === 0) {
+                    console.log("No discarded menu items.");
+                } else {
+                console.log('ID\tMenu Item ID\tDiscarded Date\tName');
+                // Print each item
+                discardedMenuItems.forEach(item => {
+                    console.log(`${item.id}\t${item.menu_item_id}\t\t${formatDate(item.discarded_date)}\t${item.name}`);
+                });
+                }
+                console.log('=========================================================================================');
+                function formatDate(dateString: any) {
+                    const date = new Date(dateString);
+                    return date.toISOString().split('T')[0];
+                }
+                this.roleBasedMenuObject.displayMenuForDiscardedItemsForChef();
+            }
             else if (message.includes('ERROR')) {
                 console.error(message);
                 this.client.end();

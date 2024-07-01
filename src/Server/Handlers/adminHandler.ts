@@ -1,7 +1,10 @@
 import net from 'net';
 import { AdminController } from '../../Controllers/adminController';
+import { NotificationService } from '../../Services/notificationService';
 
 export class AdminHandler {
+
+    private notificationService = new NotificationService();
 
     public handleAdmin(socket: net.Socket, command: string, params: string[]) {
         const adminController = new AdminController();
@@ -33,6 +36,28 @@ export class AdminHandler {
             case  'admin_viewAllMenuItem':
                 adminController.viewAllMenuItems(socket);
                 // socket.write(`Response_viewAllMenuItems;${menuItems}`);
+                break;
+            case  'admin_viewDiscardedMenuItems':
+                (async () => {
+                    await adminController.addDiscarededMenuItemsInDatabase();
+                    adminController.sendAllDiscardedMenuItemsToClient(socket);
+                })();
+                break;
+            case 'admin_removeMenuItem':
+                const foodItemId = parseInt(params[0]);
+                adminController.deleteMenuItem(foodItemId);
+                break;
+            case 'admin_sendDiscardedItemFeedbackNotification':
+                const menuItemIdToGetFeedback = parseInt(params[0]);
+                const today = new Date().toISOString().split('T')[0];
+                (async () => {
+                    const menuItem = await adminController.getMenuItemById(menuItemIdToGetFeedback);
+                    if(menuItem!= null)
+                        {
+                            this.notificationService.addNotificationForAllUsers(`Give Detailed Feedback On Discarded Menu Item with Menu Item Id and Name as: ${menuItemIdToGetFeedback} > ${menuItem.name}`, today);
+                            console.log("Notification For Getting Detailed feedback is send successfully.");
+                        }
+                })();
                 break;
             default:
                 response = 'Unknown admin command';

@@ -7,6 +7,9 @@ import { EmployeeMenuSelectionRepository } from '../Utils/Database Repositories/
 import net from 'net';
 import { EmployeeMenuSelections } from '../Models/employeeMenuSelection';
 import { MenuItemRepository } from '../Utils/Database Repositories/menuItemRepository';
+import { ChefDailyMenus } from '../Models/chefDailyMenu';
+import { DiscardedFoodItemFeedback } from '../Models/discardedFoodItemFeedback';
+import { DiscardedFoodItemFeedbackRepository } from '../Utils/Database Repositories/discardedFoodItemFeedbackRepository';
 
 export class EmployeeController {
 
@@ -15,6 +18,7 @@ export class EmployeeController {
     private notificationServiceObject = new NotificationService();
     private employeeMenuSelectionrepositoryObject = new EmployeeMenuSelectionRepository();
     private menuItemRepositoryObject = new MenuItemRepository();
+    private discardedFoodItemFeedbackRepositoryObject = new DiscardedFoodItemFeedbackRepository();
 
     public async giveFeedback(userId: number, menuItemId: number, rating: number, comment: string, date: string) {
         try {
@@ -42,7 +46,7 @@ export class EmployeeController {
 
     public async getRolledOutMenu(socket: net.Socket, notificationId: number, userId: number): Promise<void> {
         const rolledOutMenu = await this.chefdailyMenuRepositoryObject.getTodaysRolledOutMenu();
-
+        
         // socket.write(JSON.stringify(notifications));
         socket.write(`Response_rolledOutMenu;${JSON.stringify(rolledOutMenu)};${userId};${notificationId}`);
     }
@@ -51,15 +55,29 @@ export class EmployeeController {
         await this.notificationServiceObject.markNotificationAsSeen(notificationId);
     }
 
-    public async updateVotedItem(itemId: number, userId: number) {
+    public async updateVotedItem(breakfastItemId: number, lunchItemId: number, dinnerItemId: number, userId: number) {
         const today = new Date().toISOString().split('T')[0];        
-        const userMenuSelection: EmployeeMenuSelections= {
+        const userMenuSelectionForBreakfast: EmployeeMenuSelections= {
             id: 0,
             user_id: userId,
-            menu_item_id: itemId,
+            menu_item_id: breakfastItemId,
             selection_date: today
         };
-        await this.employeeMenuSelectionrepositoryObject.addEmployeeMenuSelection(userMenuSelection);
+        const userMenuSelectionForLunch: EmployeeMenuSelections= {
+            id: 0,
+            user_id: userId,
+            menu_item_id: lunchItemId,
+            selection_date: today
+        };
+        const userMenuSelectionForDinner: EmployeeMenuSelections= {
+            id: 0,
+            user_id: userId,
+            menu_item_id: dinnerItemId,
+            selection_date: today
+        };
+        await this.employeeMenuSelectionrepositoryObject.addEmployeeMenuSelection(userMenuSelectionForBreakfast);
+        await this.employeeMenuSelectionrepositoryObject.addEmployeeMenuSelection(userMenuSelectionForLunch);
+        await this.employeeMenuSelectionrepositoryObject.addEmployeeMenuSelection(userMenuSelectionForDinner);
     }
 
     public async deleteNotification(notificationId: number): Promise<void> {
@@ -82,5 +100,18 @@ export class EmployeeController {
 
     public async sendSelectedMenuItems() {
 
+    }
+
+    public async addDiscarededMenuItemFeedbackInDatabase(dislikes: string, desiredTaste: string, momRecipe: string, discardedMenuItemId: number) {
+        const today = new Date().toISOString().split('T')[0];        
+        const discardedFoodItemFeedback: DiscardedFoodItemFeedback= {
+            id: 0,
+            menu_item_id: discardedMenuItemId,
+            dislikes: dislikes,
+            desired_taste: desiredTaste,
+            mom_recipe: momRecipe,
+            feedback_date: today
+        };
+        await this.discardedFoodItemFeedbackRepositoryObject.addFeedback(discardedFoodItemFeedback);
     }
 }
