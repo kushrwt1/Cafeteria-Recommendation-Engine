@@ -16,14 +16,18 @@ const chefDailyMenuRepository_1 = require("../Utils/Database Repositories/chefDa
 const employeeMenuSelectionRepository_1 = require("../Utils/Database Repositories/employeeMenuSelectionRepository");
 const menuItemRepository_1 = require("../Utils/Database Repositories/menuItemRepository");
 const discardedFoodItemFeedbackRepository_1 = require("../Utils/Database Repositories/discardedFoodItemFeedbackRepository");
+const employeeProfileService_1 = require("../Services/employeeProfileService");
+const employeeProfileRepository_1 = require("../Utils/Database Repositories/employeeProfileRepository");
 class EmployeeController {
     constructor() {
         this.feedbackRepositoryObject = new feedbackRepository_1.FeedbackRepository();
         this.chefdailyMenuRepositoryObject = new chefDailyMenuRepository_1.ChefDailyMenuRepository();
         this.notificationServiceObject = new notificationService_1.NotificationService();
+        this.employeeProfileServiceObject = new employeeProfileService_1.EmployeeProfileService();
         this.employeeMenuSelectionrepositoryObject = new employeeMenuSelectionRepository_1.EmployeeMenuSelectionRepository();
         this.menuItemRepositoryObject = new menuItemRepository_1.MenuItemRepository();
         this.discardedFoodItemFeedbackRepositoryObject = new discardedFoodItemFeedbackRepository_1.DiscardedFoodItemFeedbackRepository();
+        this.employeeProfileRepositoryObject = new employeeProfileRepository_1.EmployeeProfileRepository();
     }
     giveFeedback(userId, menuItemId, rating, comment, date) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -53,9 +57,80 @@ class EmployeeController {
     }
     getRolledOutMenu(socket, notificationId, userId) {
         return __awaiter(this, void 0, void 0, function* () {
-            const rolledOutMenu = yield this.chefdailyMenuRepositoryObject.getTodaysRolledOutMenu();
-            // socket.write(JSON.stringify(notifications));
-            socket.write(`Response_rolledOutMenu;${JSON.stringify(rolledOutMenu)};${userId};${notificationId}`);
+            // const rolledOutMenu = await this.chefdailyMenuRepositoryObject.getTodaysRolledOutMenu();
+            // socket.write(`Response_rolledOutMenu;${JSON.stringify(rolledOutMenu)};${userId};${notificationId}`);
+            try {
+                const rolledOutMenu = yield this.chefdailyMenuRepositoryObject.getTodaysRolledOutMenu();
+                console.log(`Before Sorting: ${rolledOutMenu}`);
+                const employeeProfile = yield this.employeeProfileRepositoryObject.getEmployeeProfileByUserId(userId);
+                let isEmployeeProfileExists = "No";
+                if (employeeProfile) {
+                    isEmployeeProfileExists = "Yes";
+                    const detailedMenuItems = [];
+                    if (rolledOutMenu != null) {
+                        for (const menu of rolledOutMenu) {
+                            const menuItem = yield this.menuItemRepositoryObject.getMenuItemById(menu.menu_item_id);
+                            if (menuItem) {
+                                detailedMenuItems.push(menuItem);
+                            }
+                        }
+                        console.log(`After getting whole menu Items ${detailedMenuItems}`);
+                        // Sort detailed menu items based on employee profile
+                        detailedMenuItems.sort((a, b) => {
+                            let scoreA = 0;
+                            let scoreB = 0;
+                            // Compare dietary type
+                            if (a.dietary_type === employeeProfile.dietary_preference)
+                                scoreA += 1;
+                            if (b.dietary_type === employeeProfile.dietary_preference)
+                                scoreB += 1;
+                            // Compare spice level
+                            if (a.spice_level === employeeProfile.spice_level)
+                                scoreA += 1;
+                            if (b.spice_level === employeeProfile.spice_level)
+                                scoreB += 1;
+                            // Compare cuisine type
+                            if (a.cuisine_type === employeeProfile.cuisine_preference)
+                                scoreA += 1;
+                            if (b.cuisine_type === employeeProfile.cuisine_preference)
+                                scoreB += 1;
+                            // Compare sweet preference
+                            if (a.is_sweet === employeeProfile.sweet_tooth)
+                                scoreA += 1;
+                            if (b.is_sweet === employeeProfile.sweet_tooth)
+                                scoreB += 1;
+                            // Sort by descending score
+                            const scoreComparison = scoreB - scoreA;
+                            if (scoreComparison !== 0) {
+                                return scoreComparison;
+                            }
+                            // Tie-breaking based on preferred attributes
+                            const preferredAttributesA = (a.dietary_type === 'Vegetarian' ? 1 : 0) +
+                                (a.spice_level === 'Medium' ? 1 : 0) +
+                                (a.cuisine_type === 'North Indian' ? 1 : 0) +
+                                (a.is_sweet ? 1 : 0);
+                            const preferredAttributesB = (b.dietary_type === 'Vegetarian' ? 1 : 0) +
+                                (b.spice_level === 'Medium' ? 1 : 0) +
+                                (b.cuisine_type === 'North Indian' ? 1 : 0) +
+                                (b.is_sweet ? 1 : 0);
+                            if (preferredAttributesA !== preferredAttributesB) {
+                                return preferredAttributesB - preferredAttributesA;
+                            }
+                            // Tie-breaking by price (ascending)
+                            return a.price - b.price;
+                        });
+                        console.log(`After Sorting:${detailedMenuItems}`);
+                    }
+                    // Send the sorted menu items to the client
+                    socket.write(`Response_rolledOutMenu;${JSON.stringify(detailedMenuItems)};${userId};${notificationId};${isEmployeeProfileExists}`);
+                }
+                else {
+                    socket.write(`Response_rolledOutMenu;${JSON.stringify(rolledOutMenu)};${userId};${notificationId};${isEmployeeProfileExists}`);
+                }
+            }
+            catch (error) {
+                console.error(`Error fetching rolled out menu: ${error}`);
+            }
         });
     }
     markNotificationAsSeen(notificationId) {
@@ -126,6 +201,26 @@ class EmployeeController {
                 feedback_date: today
             };
             yield this.discardedFoodItemFeedbackRepositoryObject.addFeedback(discardedFoodItemFeedback);
+        });
+    }
+    updateEmployeeProfile(userId, dietaryPreference, spiceLevel, cuisinePreference, sweetTooth) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const today = new Date().toISOString().split('T')[0];
+            const profile = {
+                id: 0,
+                user_id: userId,
+                dietary_preference: dietaryPreference,
+                spice_level: spiceLevel,
+                cuisine_preference: cuisinePreference,
+                sweet_tooth: sweetTooth,
+                profile_update_date: today
+            };
+            try {
+                yield this.employeeProfileServiceObject.updateEmployeeProfile(profile);
+            }
+            catch (error) {
+                console.error('Error updating profile:', error);
+            }
         });
     }
 }

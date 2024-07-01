@@ -21,21 +21,23 @@ class AdminHandler {
         let response;
         switch (command) {
             case 'admin_addMenuItem':
-                const [nameStr, priceStr, availabilityStr, mealTypeIdStr] = params;
+                const [nameStr, priceStr, availabilityStr, mealTypeIdStr, dietary_type, spice_level, cuisine_type, isSweetStr] = params;
                 const name = nameStr.toString();
                 const price = parseFloat(priceStr);
                 const availability = availabilityStr === 'true';
                 const meal_type_id = parseInt(mealTypeIdStr);
-                adminController.addMenuItem({ menu_item_id: 0, name, availability, price, meal_type_id }, socket);
+                const is_sweet = isSweetStr === 'true';
+                adminController.addMenuItem({ menu_item_id: 0, name, availability, price, meal_type_id, dietary_type, spice_level, cuisine_type, is_sweet }, socket);
                 break;
             case 'admin_updateMenuItem':
-                const [menuItemIdStr, newNameStr, newPriceStr, newAvailabilityStr, newMealTypeIdStr] = params;
+                const [menuItemIdStr, newNameStr, newPriceStr, newAvailabilityStr, newMealTypeIdStr, newDietaryType, newSpiceLevel, newCuisineType, newIsSweetStr] = params;
                 const menuItemId = parseInt(menuItemIdStr);
                 const newName = newNameStr.toString();
                 const newPrice = parseFloat(newPriceStr);
                 const newAvailability = newAvailabilityStr === 'true';
                 const newMealTypeId = parseInt(newMealTypeIdStr);
-                adminController.updateMenuItem({ menu_item_id: menuItemId, name: newName, availability: newAvailability, price: newPrice, meal_type_id: newMealTypeId });
+                const newIsSweet = newIsSweetStr === 'true';
+                adminController.updateMenuItem({ menu_item_id: menuItemId, name: newName, availability: newAvailability, price: newPrice, meal_type_id: newMealTypeId, dietary_type: newDietaryType, spice_level: newSpiceLevel, cuisine_type: newCuisineType, is_sweet: newIsSweet });
                 break;
             case 'admin_deleteMenuItem':
                 const [menuItemIdToDeleteStr] = params;

@@ -177,11 +177,11 @@ class Client {
                 // this.roleBasedMenuObject.chefMenu();
                 // this.roleBasedMenuObject.employeeMenu(userId);
             } else if (message.includes('Response_rolledOutMenu')) {
-                const [command, rolledOutMenuStr, userIdStr, notificationIdStr] = message.split(';');
+                const [command, rolledOutMenuStr, userIdStr, notificationIdStr, isEmployeeProfileExists] = message.split(';');
                 const rolledOutMenu = JSON.parse(rolledOutMenuStr);
                 const userId = parseInt(userIdStr);
                 const notificationId = parseInt(notificationIdStr);
-                this.roleBasedMenuObject.viewRolledOutMenuNotification(rolledOutMenu, userId, notificationId);
+                this.roleBasedMenuObject.viewRolledOutMenuNotification(rolledOutMenu, userId, notificationId, isEmployeeProfileExists);
                 // console.log(menuItems);
                 // this.roleBasedMenuObject.chefMenu();
                 // this.roleBasedMenuObject.employeeMenu(userId);

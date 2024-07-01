@@ -26,7 +26,7 @@ CREATE TABLE Meal_Types (
 
 
 -- Menu Item Table 
-CREATE TABLE Menu_Items ( 
+CREATE TABLE Menu_Items (
     menu_item_id BIGINT AUTO_INCREMENT PRIMARY KEY, 
     name VARCHAR(255) NOT NULL, 
     availability BOOLEAN NOT NULL DEFAULT TRUE, 
@@ -34,6 +34,12 @@ CREATE TABLE Menu_Items (
     meal_type_id INT, 
     FOREIGN KEY (meal_type_id) REFERENCES Meal_Types(id) ON DELETE CASCADE ON UPDATE CASCADE 
 ); 
+
+ALTER TABLE Menu_Items 
+ADD COLUMN dietary_type VARCHAR(50) NOT NULL DEFAULT 'Vegetarian', 
+ADD COLUMN spice_level VARCHAR(50) NOT NULL DEFAULT 'Medium', 
+ADD COLUMN cuisine_type VARCHAR(50) NOT NULL DEFAULT 'North Indian', 
+ADD COLUMN is_sweet BOOLEAN NOT NULL DEFAULT FALSE;
 
 
 -- Chef Daily Menus Table 
@@ -95,3 +101,23 @@ CREATE TABLE Discarded_Menu_Item (
     name varchar(255 NOT NULL),
     FOREIGN KEY (menu_item_id) REFERENCES menu_items(menu_item_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+-- Employee Profile Table
+CREATE TABLE Employee_Profile (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    dietary_preference VARCHAR(50) NOT NULL, -- Vegetarian, Non Vegetarian, Eggetarian
+    spice_level VARCHAR(50) NOT NULL, -- High, Medium, Low
+    cuisine_preference VARCHAR(50) NOT NULL, -- North Indian, South Indian, Other
+    sweet_tooth BOOLEAN NOT NULL, -- Yes, No
+    profile_update_date DATE NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+
+
+
+
+
+
+

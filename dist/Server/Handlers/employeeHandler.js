@@ -43,7 +43,7 @@ class EmployeeHandler {
                 employeeController.markNotificationAsSeen(notificationIdToMarkAsSeen);
                 employeeController.updateVotedItem(breakfastItemId, lunchItemId, dinnerItemId, employeeId2);
                 break;
-            case 'employee_markNotificationAsSeen_sendDiscardedItemFeedback':
+            case 'employee_markNotificationAsSeen_sendDiscardedItemFeedbackToServer':
                 const [employeeId3Str, notificationIdToMarkAsSeen1Str, dislikes, desiredTaste, momRecipe, discardedMenuItemIdStr] = params;
                 const employeeId3 = parseInt(employeeId3Str);
                 const notificationIdToMarkAsSeen1 = parseInt(notificationIdToMarkAsSeen1Str);
@@ -60,6 +60,12 @@ class EmployeeHandler {
                 employeeController.viewAllMenuItems(socket, employeeUserId);
                 // const notificationIdToDelete = parseInt(params[0]);
                 // employeeController.deleteNotification(notificationIdToDelete);
+                break;
+            case 'employee_updateEmployeeProfile':
+                const [employeeId4Str, dietaryPreference, spiceLevel, cuisinePreference, sweetToothStr] = params;
+                const employeeId4 = parseInt(employeeId4Str);
+                const sweetTooth = sweetToothStr === 'true';
+                employeeController.updateEmployeeProfile(employeeId4, dietaryPreference, spiceLevel, cuisinePreference, sweetTooth);
                 break;
             default:
                 response = 'Unknown admin command';

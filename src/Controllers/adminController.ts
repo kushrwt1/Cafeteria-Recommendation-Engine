@@ -11,7 +11,7 @@ export class AdminController {
     private recommendationService = new RecommendationService();
     private discardedMenuItemRepositoryObject = new DiscardedMenuItemRepository();
     
-    public async addMenuItem(menuItem: {menu_item_id: 0, name: string; availability: boolean; price: number; meal_type_id: number }, socket: net.Socket) {
+    public async addMenuItem(menuItem: {menu_item_id: 0, name: string; availability: boolean; price: number; meal_type_id: number, dietary_type: string, spice_level: string, cuisine_type: string, is_sweet: boolean}, socket: net.Socket) {
         try {
             this.menuItemRepositoryObject.addMenuItem(menuItem, socket);
         } catch (error) {
@@ -19,7 +19,7 @@ export class AdminController {
         }
     }
 
-    public async updateMenuItem(menuItem: { menu_item_id: number; name: string; availability: boolean; price: number; meal_type_id: number }) {
+    public async updateMenuItem(menuItem: { menu_item_id: number; name: string; availability: boolean; price: number; meal_type_id: number, dietary_type: string, spice_level: string, cuisine_type: string, is_sweet: boolean}) {
         try {
             this.menuItemRepositoryObject.updateMenuItem(menuItem);
         } catch (error) {

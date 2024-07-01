@@ -31,6 +31,19 @@ export class RoleBasedMenu {
         return new Promise((resolve) => this.rl.question(question, resolve));
     }
 
+    private async askAndValidate(question: any, validValues: any) {
+        let answer;
+        while (true) {
+            answer = await this.askQuestion(question);
+            if (validValues.includes(answer)) {
+                break;
+            } else {
+                console.log(`Invalid value. Please choose from: ${validValues.join(', ')}`);
+            }
+        }
+        return answer;
+    }
+
     public async adminMenu() {
         console.log('\n');
         console.log("Menu For Admin:");
@@ -85,8 +98,15 @@ export class RoleBasedMenu {
         const mealTypeIdStr = await this.askQuestion('Enter Meal Type Id(1 for breakfast, 2 For lunch, 3 for dinner) : ');
         const mealTypeId = parseInt(mealTypeIdStr);
 
-        const command = `admin_addMenuItem;${name};${price};${availability};${mealTypeId}`;
+        const dietaryType = await this.askAndValidate.call(this, 'Enter Dietary Type of this food item (Vegetarian/Non Vegetarian/Eggetarian): ', ['Vegetarian', 'Non Vegetarian', 'Eggetarian']);
+        const spiceLevel = await this.askAndValidate.call(this, 'Enter Spice Level of this food item (High/Medium/Low): ', ['High', 'Medium', 'Low']);
+        const cuisineType = await this.askAndValidate.call(this, 'Enter Cuisine Type of this food item (North Indian/South Indian/Other): ', ['North Indian', 'South Indian', 'Other']);
+        const isSweetStr = await this.askQuestion('Is the item is sweet? (yes/no): ');
+        const isSweet = isSweetStr.toLowerCase() === 'yes';
+
+        const command = `admin_addMenuItem;${name};${price};${availability};${mealTypeId};${dietaryType};${spiceLevel};${cuisineType};${isSweet}`;
         this.client.write(command);
+        console.log("\nMenu Item added to Database successfully");
         this.adminMenu();
     }
 
@@ -101,8 +121,15 @@ export class RoleBasedMenu {
         const mealTypeIdStr = await this.askQuestion('Enter Meal Type Id(1 for breakfast, 2 For lunch, 3 for dinner) : ');
         const mealTypeId = parseInt(mealTypeIdStr);
 
-        const command = `admin_updateMenuItem;${menuItemId};${name};${price};${availability};${mealTypeId}`;
+        const dietaryType = await this.askAndValidate.call(this, 'Enter Dietary Type of this food item (Vegetarian/Non Vegetarian/Eggetarian): ', ['Vegetarian', 'Non Vegetarian', 'Eggetarian']);
+        const spiceLevel = await this.askAndValidate.call(this, 'Enter Spice Level of this food item (High/Medium/Low): ', ['High', 'Medium', 'Low']);
+        const cuisineType = await this.askAndValidate.call(this, 'Enter Cuisine Type of this food item (North Indian/South Indian/Other): ', ['North Indian', 'South Indian', 'Other']);
+        const isSweetStr = await this.askQuestion('Is the item is sweet? (Yes/No): ');
+        const isSweet = isSweetStr.toLowerCase() === 'yes';
+
+        const command = `admin_updateMenuItem;${menuItemId};${name};${price};${availability};${mealTypeId};${dietaryType};${spiceLevel};${cuisineType};${isSweet}`;
         this.client.write(command);
+        console.log("\nMenu Item updated in Database successfully");
         this.adminMenu();
     }
 
@@ -361,7 +388,8 @@ export class RoleBasedMenu {
         console.log("3. View Today's menu");
         console.log("4. Give Feedback");
         console.log("5. View Menu Items");
-        console.log("6. Logout");
+        console.log("6. Update your Profile");
+        console.log("7. Logout");
 
         const option = await this.askQuestion('Choose an option: ');
 
@@ -386,6 +414,9 @@ export class RoleBasedMenu {
                     // this.rl.close();
                     break;
                 case '6':
+                    this.updateEmployeeProfile(userId);
+                    break;
+                case '7':
                     this.logout();
                     break;
                 default:
@@ -517,7 +548,7 @@ export class RoleBasedMenu {
             //     this.viewNotificationsMenu(userId);
             // }
     }
-    public async viewRolledOutMenuNotification(rolledOutMenu:any[], userId: number, notificationId: number) {
+    public async viewRolledOutMenuNotification(rolledOutMenu:any[], userId: number, notificationId: number, isEmployeeProfileExists: string) {
         try {
             
             // console.log(`Fetching rolled-out menu for user ${userId}...`);
@@ -525,6 +556,13 @@ export class RoleBasedMenu {
             // rolledOutMenu.forEach((item: { menu_item_id: any; date: any; name: any; meal_type_id: any}) => {
             //     console.log(`ID: ${item.menu_item_id}, NAME: ${item.name}, Date: ${item.date}`);
             // });
+            if(isEmployeeProfileExists === "Yes") {
+                    console.log("\nYour Employee Profile Exists.");
+                    console.log("Showing rolled Out Menu according to Your profile Preferences.....");
+                } else {
+                    console.log("\nYour Employee Profile Does Not Exists.");
+                }
+
 
             console.log(`\nFetching rolled-out menu for user ${userId}...`);
             // Group menu items by meal_type_id
@@ -540,7 +578,7 @@ export class RoleBasedMenu {
                     mealType.items.push(item);
                 }
             });
-
+            
             // Display the grouped menu items
             console.log('=========================================================================================');
             console.log("Rolled out menu items: ...");
@@ -561,26 +599,6 @@ export class RoleBasedMenu {
             console.error(`Error viewing rolled-out menu notification: ${error}`);
         }
     }
-
-    // private async voteForTodaysMenu(userId: number, notificationId: number) {
-    //     try {
-    //         console.log(`Vote For Today's menu:`);
-    //         // Allow voting for today's menu
-    //         // For now, we'll just simulate the voting process
-    //         // const itemIdsStr = await this.askQuestion('Enter item IDs you want to vote for (comma-separated): ');
-    //         const itemIdStr = await this.askQuestion('Enter item ID you want to vote for: ');
-    //         // const itemIds = itemIdsStr.split(',').map(id => parseInt(id.trim()));
-    //         const itemId = parseInt(itemIdStr);
-
-    //         console.log("Votes submitted for items: ", itemId);
-
-    //         this.client.write(`employee_markNotificationAsSeen_updateVotedItem;${notificationId};${itemId};${userId}`);
-    //         this.employeeMenu(userId);
-    //     } catch (error) {
-    //         console.error(`Error voting for today's menu: ${error}`);
-    //     }
-        
-    // }
 
     private async voteForTodaysMenu(userId: number, notificationId: number, rolledOutMenu: any[]) {
         try {
@@ -653,15 +671,35 @@ export class RoleBasedMenu {
             const dislikes = await this.askQuestion(`What didn’t you like about ${menuItemName}: `);
             const desiredTaste = await this.askQuestion(`How would you like ${menuItemName} to taste: `);
             const momRecipe = await this.askQuestion(`Share your mom’s recipe: `);
-            const command = `employee_markNotificationAsSeen_sendDiscardedItemFeedback;${userId};${notificationId};${dislikes};${desiredTaste};${momRecipe};${menuItemId}`;
+            const command = `employee_markNotificationAsSeen_sendDiscardedItemFeedbackToServer;${userId};${notificationId};${dislikes};${desiredTaste};${momRecipe};${menuItemId}`;
             console.log("Feedback is submitted successfully. Thanks For giving your feedback");
             this.client.write(command);
             this.employeeMenu(userId);
         } catch(error) {
             console.error(`Error in sending Feedback Request to Server: ${error}`);
         }
-        
+    }
 
+    private async updateEmployeeProfile(userId: number) {
+        try {
+            console.log('\nPlease answer these questions to know about your preferences: ');
+            const dietaryPreference = await this.askAndValidate.call(this, '1) Please select one (Vegetarian, Non Vegetarian, Eggetarian): ', ['Vegetarian', 'Non Vegetarian', 'Eggetarian']);
+            const spiceLevel = await this.askAndValidate.call(this, '2) Please select your spice level (High, Medium, Low): ', ['High', 'Medium', 'Low']);
+            const cuisinePreference = await this.askAndValidate.call(this, '3) What do you prefer most (North Indian, South Indian, Other): ', ['North Indian', 'South Indian', 'Other']);
+            const sweetToothAnswer = await this.askAndValidate.call(this, '4) Do you have a sweet tooth (Yes, No): ', ['Yes', 'No']);
+            const sweetTooth = sweetToothAnswer === 'Yes';
+
+            console.log('Your preferences have been recorded.');
+            
+            const command = `employee_updateEmployeeProfile;${userId};${dietaryPreference};${spiceLevel};${cuisinePreference};${sweetTooth}`;
+            this.client.write(command);
+            console.log("Employee Profile Updated Successfully");
+            this.employeeMenu(userId);
+
+        } catch(error) {
+            console.error(`Error in sending Update Employee Profile Request to Server: ${error}`);
+        }
+        
     }
 
 }
