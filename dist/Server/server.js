@@ -86,10 +86,12 @@ const roleRepository_1 = require("../Utils/Database Repositories/roleRepository"
 const adminHandler_1 = require("../Server/Handlers/adminHandler");
 const chefHandler_1 = require("../Server/Handlers/chefHandler");
 const employeeHandler_1 = require("../Server/Handlers/employeeHandler");
+const userActivityservice_1 = require("../Services/userActivityservice");
 class Server {
     constructor() {
         this.userRepository = new userRepository_1.UserRepository();
         this.roleRepository = new roleRepository_1.RoleRepository();
+        this.userActivityService = new userActivityservice_1.UserActivityService();
         this.startServer();
     }
     startServer() {
@@ -137,7 +139,8 @@ class Server {
                 if (user) {
                     const role = yield this.roleRepository.getRoleById(user.role_id);
                     if (role) {
-                        socket.write(`LOGIN_SUCCESS ${role.role_name} ${user.user_id}\n`);
+                        socket.write(`LOGIN_SUCCESS ${role.role_name} ${user.user_id} ${username}\n`);
+                        this.userActivityService.logActivity(user.user_id, 'Logged In');
                     }
                     else {
                         socket.write('ERROR Role not found\n');
@@ -149,7 +152,7 @@ class Server {
             }
             catch (error) {
                 console.error(`Error during login: ${error}`);
-                socket.write(`ERROR ${error}\n`);
+                socket.write(`ERROR: ${error}\n`);
             }
         });
     }

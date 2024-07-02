@@ -81,14 +81,17 @@ import { RoleRepository } from '../Utils/Database Repositories/roleRepository';
 import { AdminHandler } from '../Server/Handlers/adminHandler';
 import { ChefHandler } from '../Server/Handlers/chefHandler';
 import { EmployeeHandler } from '../Server/Handlers/employeeHandler';
+import { UserActivityService } from '../Services/userActivityservice';
 
 class Server {
     private userRepository: UserRepository;
     private roleRepository: RoleRepository;
+    private userActivityService: UserActivityService;
 
     constructor() {
         this.userRepository = new UserRepository();
         this.roleRepository = new RoleRepository();
+        this.userActivityService = new UserActivityService();
         this.startServer();
     }
 
@@ -138,7 +141,8 @@ class Server {
             if (user) {
                 const role = await this.roleRepository.getRoleById(user.role_id);
                 if (role) {
-                    socket.write(`LOGIN_SUCCESS ${role.role_name} ${user.user_id}\n`);
+                    socket.write(`LOGIN_SUCCESS ${role.role_name} ${user.user_id} ${username}\n`);
+                    this.userActivityService.logActivity(user.user_id, 'Logged In');
                 } else {
                     socket.write('ERROR Role not found\n');
                 }
@@ -147,7 +151,7 @@ class Server {
             }
         } catch (error) {
             console.error(`Error during login: ${error}`);
-            socket.write(`ERROR ${error}\n`);
+            socket.write(`ERROR: ${error}\n`);
         }
     }
 }

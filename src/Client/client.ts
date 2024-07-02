@@ -80,19 +80,23 @@ import net from 'net';
 import readline from 'readline';
 import { RoleBasedMenu, showMenu } from '../Features/RoleBasedMenus/roleBasedMenu';
 import { DiscardedMenuItem } from '../Models/discardedMenuItem';
+import { UserActivityService } from '../Services/userActivityservice';
 
 class Client {
     private client!: net.Socket;
     private rl!: readline.Interface;
     private roleBasedMenuObject!: RoleBasedMenu;
+    private userActivityService: UserActivityService;
 
     constructor() {
        this.connectToServer();
+       this.userActivityService = new UserActivityService();
     }
 
     private connectToServer() {
         this.client = net.createConnection({ port: 3000 }, () => {
             console.log('Connected to server');
+            console.log("\nEnter Your Credentials to Log In:");
             this.login();
         });
 
@@ -112,10 +116,17 @@ class Client {
             const message = data.toString().trim();
 
             if (message.includes('LOGIN_SUCCESS')) {
-                const [_, role, userIdStr] = message.split(' ');
+                const [_, role, userIdStr, username] = message.split(' ');
                 const userId = parseInt(userIdStr, 10);
+                console.log('\n=========================================================================================');
+                console.log(`Welcome ${username}`);
+                console.log('=========================================================================================');
                 showMenu(role, userId, this.client, this.rl, this.logout.bind(this));
-            } else if (message.includes('Response_viewAllMenuItems')) {
+            } else if(message.includes('ERROR Invalid credentials')) {
+                console.log("\nYour Credentials are invalid. Please enter the valid credentials: ");
+                this.login();
+            }
+            else if (message.includes('Response_viewAllMenuItems')) {
                 const [command, menuItemsStr] = message.split(';');
                 const menuItems = JSON.parse(menuItemsStr);
                 console.table(menuItems);

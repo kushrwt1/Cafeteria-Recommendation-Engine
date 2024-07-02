@@ -114,10 +114,11 @@ CREATE TABLE Employee_Profile (
     FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-
-
-
-
-
-
-
+-- User activity table
+CREATE TABLE user_activity (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    activity_type VARCHAR(255) NOT NULL,
+    activity_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE ON UPDATE CASCADE
+);

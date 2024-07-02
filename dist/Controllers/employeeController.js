@@ -61,7 +61,6 @@ class EmployeeController {
             // socket.write(`Response_rolledOutMenu;${JSON.stringify(rolledOutMenu)};${userId};${notificationId}`);
             try {
                 const rolledOutMenu = yield this.chefdailyMenuRepositoryObject.getTodaysRolledOutMenu();
-                console.log(`Before Sorting: ${rolledOutMenu}`);
                 const employeeProfile = yield this.employeeProfileRepositoryObject.getEmployeeProfileByUserId(userId);
                 let isEmployeeProfileExists = "No";
                 if (employeeProfile) {
@@ -74,7 +73,6 @@ class EmployeeController {
                                 detailedMenuItems.push(menuItem);
                             }
                         }
-                        console.log(`After getting whole menu Items ${detailedMenuItems}`);
                         // Sort detailed menu items based on employee profile
                         detailedMenuItems.sort((a, b) => {
                             let scoreA = 0;
@@ -119,13 +117,14 @@ class EmployeeController {
                             // Tie-breaking by price (ascending)
                             return a.price - b.price;
                         });
-                        console.log(`After Sorting:${detailedMenuItems}`);
                     }
                     // Send the sorted menu items to the client
                     socket.write(`Response_rolledOutMenu;${JSON.stringify(detailedMenuItems)};${userId};${notificationId};${isEmployeeProfileExists}`);
+                    console.log("Rolled Out Menu According To User preference is sent to Client Successfully");
                 }
                 else {
                     socket.write(`Response_rolledOutMenu;${JSON.stringify(rolledOutMenu)};${userId};${notificationId};${isEmployeeProfileExists}`);
+                    console.log("Rolled Out Menu Without User preference is sent to Client Successfully");
                 }
             }
             catch (error) {

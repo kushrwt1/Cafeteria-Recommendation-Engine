@@ -82,13 +82,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const net_1 = __importDefault(require("net"));
 const readline_1 = __importDefault(require("readline"));
 const roleBasedMenu_1 = require("../Features/RoleBasedMenus/roleBasedMenu");
+const userActivityservice_1 = require("../Services/userActivityservice");
 class Client {
     constructor() {
         this.connectToServer();
+        this.userActivityService = new userActivityservice_1.UserActivityService();
     }
     connectToServer() {
         this.client = net_1.default.createConnection({ port: 3000 }, () => {
             console.log('Connected to server');
+            console.log("\nEnter Your Credentials to Log In:");
             this.login();
         });
         this.rl = readline_1.default.createInterface({
@@ -103,9 +106,16 @@ class Client {
         this.client.on('data', (data) => {
             const message = data.toString().trim();
             if (message.includes('LOGIN_SUCCESS')) {
-                const [_, role, userIdStr] = message.split(' ');
+                const [_, role, userIdStr, username] = message.split(' ');
                 const userId = parseInt(userIdStr, 10);
+                console.log('\n=========================================================================================');
+                console.log(`Welcome ${username}`);
+                console.log('=========================================================================================');
                 (0, roleBasedMenu_1.showMenu)(role, userId, this.client, this.rl, this.logout.bind(this));
+            }
+            else if (message.includes('ERROR Invalid credentials')) {
+                console.log("\nYour Credentials are invalid. Please enter the valid credentials: ");
+                this.login();
             }
             else if (message.includes('Response_viewAllMenuItems')) {
                 const [command, menuItemsStr] = message.split(';');
