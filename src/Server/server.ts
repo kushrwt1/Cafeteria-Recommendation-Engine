@@ -81,7 +81,8 @@ import { RoleRepository } from '../Utils/Database Repositories/roleRepository';
 import { AdminHandler } from '../Server/Handlers/adminHandler';
 import { ChefHandler } from '../Server/Handlers/chefHandler';
 import { EmployeeHandler } from '../Server/Handlers/employeeHandler';
-import { UserActivityService } from '../Services/userActivityservice';
+import { UserActivityService } from '../Services/userActivityService';
+
 
 class Server {
     private userRepository: UserRepository;
@@ -115,6 +116,10 @@ class Server {
                 } else if (command.startsWith('employee')) {
                     const employeeHandler = new EmployeeHandler();
                     employeeHandler.handleEmployee(socket, command, args);
+                } else if (command === 'LogUserActivity') {
+                    const [userIdStr, logMessage] = args;
+                    const userId = parseInt(userIdStr);
+                    this.userActivityService.logActivity(userId, logMessage);
                 } else {
                     socket.write('ERROR Unknown command\n');
                 }

@@ -5,14 +5,14 @@ import { EmployeeController } from '../../Controllers/employeeController';
 import readline from 'readline';
 
 
-export function showMenu(role: string, userId: number, client: net.Socket, rl:readline.Interface, logout: () => void) {
+export function showMenu(role: string, userId: number, client: net.Socket, rl:readline.Interface, logout: (userId: number) => void) {
     const roleBasedMenu = new RoleBasedMenu(client, rl, logout);
     switch (role) {
         case 'admin':
-            roleBasedMenu.adminMenu();
+            roleBasedMenu.adminMenu(userId);
             break;
         case 'chef':
-            roleBasedMenu.chefMenu();
+            roleBasedMenu.chefMenu(userId);
             break;
         case 'employee':
             roleBasedMenu.employeeMenu(userId);
@@ -25,7 +25,7 @@ export function showMenu(role: string, userId: number, client: net.Socket, rl:re
 
 export class RoleBasedMenu {
 
-    constructor(private client: net.Socket, private rl: readline.Interface, private logout: () => void) {}
+    constructor(private client: net.Socket, private rl: readline.Interface, private logout: (userId: number) => void) {}
 
     private askQuestion(question: string): Promise<string> {
         return new Promise((resolve) => this.rl.question(question, resolve));
@@ -44,7 +44,7 @@ export class RoleBasedMenu {
         return answer;
     }
 
-    public async adminMenu() {
+    public async adminMenu(userId: number) {
         console.log('\n');
         console.log("Menu For Admin:");
         console.log("1. Add Menu Item");
@@ -59,37 +59,37 @@ export class RoleBasedMenu {
         try {
             switch (option) {
                 case '1':
-                    await this.addMenuItem();
+                    await this.addMenuItem(userId);
                     break;
                 case '2':
-                    this.updateMenuItem();
+                    this.updateMenuItem(userId);
                     break;
                 case '3':
-                    this.deleteMenuItem();
+                    this.deleteMenuItem(userId);
                     break;
                 case '4':
-                    this.viewAllMenuItems();
+                    this.viewAllMenuItems(userId);
                     break;
                 case '5':
-                    this.viewDiscardedMenuItemsForAdmin();
+                    this.viewDiscardedMenuItemsForAdmin(userId);
                     break;
                 case '6':
-                    this.logout();
+                    this.logout(userId);
                     // this.client.end();
                     // this.rl.close();
                     break;
                 default:
                     console.log("Invalid option");
-                    this.adminMenu();
+                    this.adminMenu(userId);
                     break;
             }
         } catch (error) {
             console.error(`Admin menu error: ${error}`);
-            this.adminMenu();
+            this.adminMenu(userId);
         }
     }
 
-    private async addMenuItem() {
+    private async addMenuItem(userId: number) {
         const name = await this.askQuestion('Enter item name: ');
         const priceStr = await this.askQuestion('Enter item price: ');
         const price = parseFloat(priceStr);
@@ -107,10 +107,12 @@ export class RoleBasedMenu {
         const command = `admin_addMenuItem;${name};${price};${availability};${mealTypeId};${dietaryType};${spiceLevel};${cuisineType};${isSweet}`;
         this.client.write(command);
         console.log("\nMenu Item added to Database successfully");
-        this.adminMenu();
+
+        this.client.write(`LogUserActivity;${userId};'Added Menu Item with name: ${name}'`);
+        this.adminMenu(userId);
     }
 
-    private async updateMenuItem() {
+    private async updateMenuItem(userId: number) {
         const menuItemIdStr = await this.askQuestion('Enter Menu item ID: ');
         const menuItemId = parseInt(menuItemIdStr);
         const name = await this.askQuestion('Enter new name of this item: ');
@@ -130,53 +132,58 @@ export class RoleBasedMenu {
         const command = `admin_updateMenuItem;${menuItemId};${name};${price};${availability};${mealTypeId};${dietaryType};${spiceLevel};${cuisineType};${isSweet}`;
         this.client.write(command);
         console.log("\nMenu Item updated in Database successfully");
-        this.adminMenu();
+
+        this.client.write(`LogUserActivity;${userId};'Updated Menu Item: with ID: ${menuItemId} and Name: ${name}'`);
+        this.adminMenu(userId);
     }
 
-    private async deleteMenuItem() {
+    private async deleteMenuItem(userId: number) {
         const menuItemIdStr = await this.askQuestion('Enter item ID: ');
         const menuItemId = parseInt(menuItemIdStr);
 
         const command = `admin_deleteMenuItem;${menuItemId}`;
         this.client.write(command);
-        this.adminMenu();
+        console.log("\nMenu Item Deleted from Database successfully");
+
+        this.client.write(`LogUserActivity;${userId};'Deleted Menu Item with ID: ${menuItemId}'`);
+        this.adminMenu(userId);
     }
 
-    private async viewAllMenuItems() {
+    private async viewAllMenuItems(userId: number) {
         const command = `admin_viewAllMenuItem`;
         this.client.write(command);
     }
 
-    private async viewDiscardedMenuItemsForAdmin() {
+    private async viewDiscardedMenuItemsForAdmin(userId: number) {
         const command = `admin_viewDiscardedMenuItems; `;
         this.client.write(command);
     }
 
-    public async displayMenuForDiscardedItems() {
+    public async displayMenuForDiscardedItems(userId: number) {
         console.log("\nWhat would you like to do next?");
         console.log("1. Remove the Food Item from Menu List (Should be done once a month)");
         console.log("2.  Get Detailed Feedback (Should be done once a month)");
         const choice = await this.askQuestion('Enter your choice (1 or 2): ');
-        this.handleChoice(choice);
+        this.handleChoice(choice, userId);
     }
 
-    private async handleChoice(choice: string) {
+    private async handleChoice(choice: string, userId: number) {
         if (choice === '1') {
             const menuItemIdStr = await this.askQuestion("\nEnter the menu item id to remove from menu: ");
             const menuItemId = parseInt(menuItemIdStr);
-            await this.removeFoodItemFromMenu(menuItemId);
+            await this.removeFoodItemFromMenu(menuItemId, userId);
         } else if (choice === '2') {
             const menuItemIdStr = await this.askQuestion("\nEnter the Menu item Id of which we want the detailed feedback: ");
             const menuItemId = parseInt(menuItemIdStr);
-            await this.sendFeedbackNotification(menuItemId);
+            await this.sendFeedbackNotification(menuItemId, userId);
         } else {
             console.log("Invalid choice. Please enter 1 or 2.");
-            await this.displayMenuForDiscardedItems();
+            await this.displayMenuForDiscardedItems(userId);
         }
     }
 
         // Function to remove food item from menu
-    private async removeFoodItemFromMenu(menuItemId: number) {
+    private async removeFoodItemFromMenu(menuItemId: number, userId: number) {
         // console.log(`Removing ${itemName} from the menu...`);
 
         console.log(`Sending request to remove menu item ID ${menuItemId} from the menu...`);
@@ -188,17 +195,19 @@ export class RoleBasedMenu {
         // await this.menuItemRepository.removeByName(itemName);
 
         // After removing, prompt for next action or exit
-        this.adminMenu();
+        this.client.write(`LogUserActivity;${userId};'Removed Discarded Menu Item with ID: ${menuItemId}'`);
+        this.adminMenu(userId);
     }
 
     // Function to get detailed feedback
-    private async sendFeedbackNotification(menuItemId: number) {
+    private async sendFeedbackNotification(menuItemId: number, userId: number) {
 
         console.log(`Sending Feedback Notification to  all the Employees`);
         this.client.write(`admin_sendDiscardedItemFeedbackNotification;${menuItemId}`);
         console.log(`Notification to all Employees Sent Successfully`);
 
-        this.adminMenu();
+        this.client.write(`LogUserActivity;${userId};'Sent Notification about getting feedback for Discarded Menu Item with ID: ${menuItemId}'`);
+        this.adminMenu(userId);
         // const name = await this.askQuestion('What didn’t you like about <Food Item> ');
         // const priceStr = await this.askQuestion('Enter item price: ');
         // const price = parseFloat(priceStr);
@@ -225,14 +234,14 @@ export class RoleBasedMenu {
 
 
 
-    public async chefMenu() {
+    public async chefMenu(userId: number) {
         console.log('\n');
         console.log("Menu For Chefs:");
         console.log("1. Get Recommended Items for Next day Menu");
         console.log("2. Roll out menu");
         console.log("3. Update Next day menu as per selected Items by User");
         console.log("4. View All Menu Items");
-        console.log("5. View Discarded Menu Item List - (Should be done once a month)")
+        console.log("5. View Discarded Menu Item List - (Should be done once a month)");
         console.log("6. Logout  ");
 
         const option = await this.askQuestion('Choose an option: ');
@@ -243,7 +252,7 @@ export class RoleBasedMenu {
                     await this.getRecommendedItems();
                     break;
                 case '2':
-                    await this.rollOutMenu();
+                    await this.rollOutMenu(userId);
                     break;
                 case '3':
                     await this.updateFinalMenu();
@@ -259,16 +268,16 @@ export class RoleBasedMenu {
                 case '6':
                     // this.client.end();
                     // this.rl.close();
-                    this.logout();
+                    this.logout(userId);
                     break;
                 default:
                     console.log("Invalid option");
-                    this.chefMenu();
+                    this.chefMenu(userId);
                     break;
             }
         } catch (error) {
             console.error(`Chef menu error: ${error}`);
-            this.chefMenu();
+            this.chefMenu(userId);
         }
     }
 
@@ -280,7 +289,7 @@ export class RoleBasedMenu {
         // this.chefMenu();
     }
 
-    private async rollOutMenu() {
+    private async rollOutMenu(userId: number) {
         console.log("Rolling out menu...");
         const mealTypes = ['breakfast', 'lunch', 'dinner'];
         const selectedItems: { mealType: string, menuItemId: number }[] = [];
@@ -301,7 +310,9 @@ export class RoleBasedMenu {
         this.client.write(command);
 
         console.log("Menu rolled out.");
-        this.chefMenu();
+
+        this.client.write(`LogUserActivity;${userId};'Rolled Out Menu Items for Today To Employees'`);
+        this.chefMenu(userId);
     }
 
     private async updateFinalMenu() {
@@ -317,38 +328,39 @@ export class RoleBasedMenu {
         this.client.write(command);
     }
 
-    public async displayMenuForDiscardedItemsForChef() {
+    public async displayMenuForDiscardedItemsForChef(userId: number) {
         console.log("\nWhat would you like to do next?");
         console.log("1. Remove the Food Item from Menu List (Should be done once a month)");
         console.log("2.  Get Detailed Feedback (Should be done once a month)");
         const choice = await this.askQuestion('Enter your choice (1 or 2): ');
-        this.handleChoiceForChef(choice);
+        this.handleChoiceForChef(choice, userId);
     }
 
-    private async handleChoiceForChef(choice: string) {
+    private async handleChoiceForChef(choice: string, userId: number) {
         if (choice === '1') {
             const menuItemIdStr = await this.askQuestion("\nEnter the menu item id to remove from menu: ");
             const menuItemId = parseInt(menuItemIdStr);
-            await this.removeFoodItemFromMenuByChef(menuItemId);
+            await this.removeFoodItemFromMenuByChef(menuItemId, userId);
         } else if (choice === '2') {
             const menuItemIdStr = await this.askQuestion("\nEnter the Menu item Id of which the detailed feedback is needed: ");
             const menuItemId = parseInt(menuItemIdStr);
-            await this.sendFeedbackNotificationFromChef(menuItemId);
+            await this.sendFeedbackNotificationFromChef(menuItemId, userId);
         } else {
             console.log("Invalid choice. Please enter 1 or 2.");
-            await this.displayMenuForDiscardedItemsForChef();
+            await this.displayMenuForDiscardedItemsForChef(userId);
         }
     }
 
         // Function to remove food item from menu
-    private async removeFoodItemFromMenuByChef(menuItemId: number) {
+    private async removeFoodItemFromMenuByChef(menuItemId: number, userId: number) {
         // console.log(`Removing ${itemName} from the menu...`);
 
         console.log(`Sending request to remove menu item ID ${menuItemId} from the menu...`);
         this.client.write(`chef_removeMenuItem;${menuItemId}`);
         console.log(`Menu Item with Menu Item Id: ${menuItemId} is removed successfully`);
 
-        this.chefMenu();
+        this.client.write(`LogUserActivity;${userId};'Removed Discarded Menu Item with ID: ${menuItemId}'`);
+        this.chefMenu(userId);
         // Implement the logic to remove the food item from the menu
         // For example, call a repository function to remove the item from the database
         // await this.menuItemRepository.removeByName(itemName);
@@ -358,12 +370,14 @@ export class RoleBasedMenu {
     }
 
     // Function to get detailed feedback
-    private async sendFeedbackNotificationFromChef(menuItemId: number) {
+    private async sendFeedbackNotificationFromChef(menuItemId: number, userId: number) {
 
         console.log(`Sending Notification to  all the employees For Giving Detailed Feedback.....`);
         this.client.write(`chef_sendDiscardedItemFeedbackNotification;${menuItemId}`);
         console.log(`Notification to all Employees Sent Successfully`);
-        this.chefMenu();
+
+        this.client.write(`LogUserActivity;${userId};'Sent Notification about getting feedback for Discarded Menu Item with ID: ${menuItemId}'`);
+        this.chefMenu(userId);
         // const name = await this.askQuestion('What didn’t you like about <Food Item> ');
         // const priceStr = await this.askQuestion('Enter item price: ');
         // const price = parseFloat(priceStr);
@@ -417,7 +431,7 @@ export class RoleBasedMenu {
                     this.updateEmployeeProfile(userId);
                     break;
                 case '7':
-                    this.logout();
+                    this.logout(userId);
                     break;
                 default:
                     console.log("Invalid option");
@@ -442,6 +456,8 @@ export class RoleBasedMenu {
         this.client.write(command);
 
         console.log("Feedback submitted.");
+
+        this.client.write(`LogUserActivity;${userId};'Employee submitted feedback for menu Item with ID: ${menuItemId}'`);
         this.employeeMenu(userId);
     }
 
@@ -639,6 +655,7 @@ export class RoleBasedMenu {
             // Send votes to the server
             this.client.write(`employee_markNotificationAsSeen_updateVotedItem;${notificationId};${breakfastItemId};${lunchItemId};${dinnerItemId};${userId}`);
             
+            this.client.write(`LogUserActivity;${userId};'Viewed rolled Out Menu and Voted for Today's menu'`);
             // Return to the employee menu
             this.employeeMenu(userId);
         } catch (error) {
@@ -674,6 +691,8 @@ export class RoleBasedMenu {
             const command = `employee_markNotificationAsSeen_sendDiscardedItemFeedbackToServer;${userId};${notificationId};${dislikes};${desiredTaste};${momRecipe};${menuItemId}`;
             console.log("Feedback is submitted successfully. Thanks For giving your feedback");
             this.client.write(command);
+
+            this.client.write(`LogUserActivity;${userId};'Feedback about Discarded Item with ID: ${menuItemId} is submitted.'`);
             this.employeeMenu(userId);
         } catch(error) {
             console.error(`Error in sending Feedback Request to Server: ${error}`);
@@ -694,6 +713,8 @@ export class RoleBasedMenu {
             const command = `employee_updateEmployeeProfile;${userId};${dietaryPreference};${spiceLevel};${cuisinePreference};${sweetTooth}`;
             this.client.write(command);
             console.log("Employee Profile Updated Successfully");
+
+            this.client.write(`LogUserActivity;${userId};'Employee Profile is updated'`);
             this.employeeMenu(userId);
 
         } catch(error) {

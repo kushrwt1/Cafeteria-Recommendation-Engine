@@ -86,12 +86,12 @@ const roleRepository_1 = require("../Utils/Database Repositories/roleRepository"
 const adminHandler_1 = require("../Server/Handlers/adminHandler");
 const chefHandler_1 = require("../Server/Handlers/chefHandler");
 const employeeHandler_1 = require("../Server/Handlers/employeeHandler");
-const userActivityservice_1 = require("../Services/userActivityservice");
+const userActivityService_1 = require("../Services/userActivityService");
 class Server {
     constructor() {
         this.userRepository = new userRepository_1.UserRepository();
         this.roleRepository = new roleRepository_1.RoleRepository();
-        this.userActivityService = new userActivityservice_1.UserActivityService();
+        this.userActivityService = new userActivityService_1.UserActivityService();
         this.startServer();
     }
     startServer() {
@@ -115,6 +115,11 @@ class Server {
                 else if (command.startsWith('employee')) {
                     const employeeHandler = new employeeHandler_1.EmployeeHandler();
                     employeeHandler.handleEmployee(socket, command, args);
+                }
+                else if (command === 'LogUserActivity') {
+                    const [userIdStr, logMessage] = args;
+                    const userId = parseInt(userIdStr);
+                    this.userActivityService.logActivity(userId, logMessage);
                 }
                 else {
                     socket.write('ERROR Unknown command\n');

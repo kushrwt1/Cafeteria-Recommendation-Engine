@@ -14,10 +14,10 @@ function showMenu(role, userId, client, rl, logout) {
     const roleBasedMenu = new RoleBasedMenu(client, rl, logout);
     switch (role) {
         case 'admin':
-            roleBasedMenu.adminMenu();
+            roleBasedMenu.adminMenu(userId);
             break;
         case 'chef':
-            roleBasedMenu.chefMenu();
+            roleBasedMenu.chefMenu(userId);
             break;
         case 'employee':
             roleBasedMenu.employeeMenu(userId);
@@ -52,7 +52,7 @@ class RoleBasedMenu {
             return answer;
         });
     }
-    adminMenu() {
+    adminMenu(userId) {
         return __awaiter(this, void 0, void 0, function* () {
             console.log('\n');
             console.log("Menu For Admin:");
@@ -66,38 +66,38 @@ class RoleBasedMenu {
             try {
                 switch (option) {
                     case '1':
-                        yield this.addMenuItem();
+                        yield this.addMenuItem(userId);
                         break;
                     case '2':
-                        this.updateMenuItem();
+                        this.updateMenuItem(userId);
                         break;
                     case '3':
-                        this.deleteMenuItem();
+                        this.deleteMenuItem(userId);
                         break;
                     case '4':
-                        this.viewAllMenuItems();
+                        this.viewAllMenuItems(userId);
                         break;
                     case '5':
-                        this.viewDiscardedMenuItemsForAdmin();
+                        this.viewDiscardedMenuItemsForAdmin(userId);
                         break;
                     case '6':
-                        this.logout();
+                        this.logout(userId);
                         // this.client.end();
                         // this.rl.close();
                         break;
                     default:
                         console.log("Invalid option");
-                        this.adminMenu();
+                        this.adminMenu(userId);
                         break;
                 }
             }
             catch (error) {
                 console.error(`Admin menu error: ${error}`);
-                this.adminMenu();
+                this.adminMenu(userId);
             }
         });
     }
-    addMenuItem() {
+    addMenuItem(userId) {
         return __awaiter(this, void 0, void 0, function* () {
             const name = yield this.askQuestion('Enter item name: ');
             const priceStr = yield this.askQuestion('Enter item price: ');
@@ -114,10 +114,11 @@ class RoleBasedMenu {
             const command = `admin_addMenuItem;${name};${price};${availability};${mealTypeId};${dietaryType};${spiceLevel};${cuisineType};${isSweet}`;
             this.client.write(command);
             console.log("\nMenu Item added to Database successfully");
-            this.adminMenu();
+            this.client.write(`LogUserActivity;${userId};'Added Menu Item with name: ${name}'`);
+            this.adminMenu(userId);
         });
     }
-    updateMenuItem() {
+    updateMenuItem(userId) {
         return __awaiter(this, void 0, void 0, function* () {
             const menuItemIdStr = yield this.askQuestion('Enter Menu item ID: ');
             const menuItemId = parseInt(menuItemIdStr);
@@ -136,59 +137,62 @@ class RoleBasedMenu {
             const command = `admin_updateMenuItem;${menuItemId};${name};${price};${availability};${mealTypeId};${dietaryType};${spiceLevel};${cuisineType};${isSweet}`;
             this.client.write(command);
             console.log("\nMenu Item updated in Database successfully");
-            this.adminMenu();
+            this.client.write(`LogUserActivity;${userId};'Updated Menu Item: with ID: ${menuItemId} and Name: ${name}'`);
+            this.adminMenu(userId);
         });
     }
-    deleteMenuItem() {
+    deleteMenuItem(userId) {
         return __awaiter(this, void 0, void 0, function* () {
             const menuItemIdStr = yield this.askQuestion('Enter item ID: ');
             const menuItemId = parseInt(menuItemIdStr);
             const command = `admin_deleteMenuItem;${menuItemId}`;
             this.client.write(command);
-            this.adminMenu();
+            console.log("\nMenu Item Deleted from Database successfully");
+            this.client.write(`LogUserActivity;${userId};'Deleted Menu Item with ID: ${menuItemId}'`);
+            this.adminMenu(userId);
         });
     }
-    viewAllMenuItems() {
+    viewAllMenuItems(userId) {
         return __awaiter(this, void 0, void 0, function* () {
             const command = `admin_viewAllMenuItem`;
             this.client.write(command);
         });
     }
-    viewDiscardedMenuItemsForAdmin() {
+    viewDiscardedMenuItemsForAdmin(userId) {
         return __awaiter(this, void 0, void 0, function* () {
             const command = `admin_viewDiscardedMenuItems; `;
             this.client.write(command);
         });
     }
-    displayMenuForDiscardedItems() {
+    displayMenuForDiscardedItems(userId) {
         return __awaiter(this, void 0, void 0, function* () {
             console.log("\nWhat would you like to do next?");
             console.log("1. Remove the Food Item from Menu List (Should be done once a month)");
             console.log("2.  Get Detailed Feedback (Should be done once a month)");
             const choice = yield this.askQuestion('Enter your choice (1 or 2): ');
-            this.handleChoice(choice);
+            this.handleChoice(choice, userId);
         });
     }
-    handleChoice(choice) {
+    handleChoice(choice, userId) {
         return __awaiter(this, void 0, void 0, function* () {
             if (choice === '1') {
                 const menuItemIdStr = yield this.askQuestion("\nEnter the menu item id to remove from menu: ");
                 const menuItemId = parseInt(menuItemIdStr);
-                yield this.removeFoodItemFromMenu(menuItemId);
+                yield this.removeFoodItemFromMenu(menuItemId, userId);
             }
             else if (choice === '2') {
                 const menuItemIdStr = yield this.askQuestion("\nEnter the Menu item Id of which we want the detailed feedback: ");
                 const menuItemId = parseInt(menuItemIdStr);
-                yield this.sendFeedbackNotification(menuItemId);
+                yield this.sendFeedbackNotification(menuItemId, userId);
             }
             else {
                 console.log("Invalid choice. Please enter 1 or 2.");
-                yield this.displayMenuForDiscardedItems();
+                yield this.displayMenuForDiscardedItems(userId);
             }
         });
     }
     // Function to remove food item from menu
-    removeFoodItemFromMenu(menuItemId) {
+    removeFoodItemFromMenu(menuItemId, userId) {
         return __awaiter(this, void 0, void 0, function* () {
             // console.log(`Removing ${itemName} from the menu...`);
             console.log(`Sending request to remove menu item ID ${menuItemId} from the menu...`);
@@ -198,16 +202,18 @@ class RoleBasedMenu {
             // For example, call a repository function to remove the item from the database
             // await this.menuItemRepository.removeByName(itemName);
             // After removing, prompt for next action or exit
-            this.adminMenu();
+            this.client.write(`LogUserActivity;${userId};'Removed Discarded Menu Item with ID: ${menuItemId}'`);
+            this.adminMenu(userId);
         });
     }
     // Function to get detailed feedback
-    sendFeedbackNotification(menuItemId) {
+    sendFeedbackNotification(menuItemId, userId) {
         return __awaiter(this, void 0, void 0, function* () {
             console.log(`Sending Feedback Notification to  all the Employees`);
             this.client.write(`admin_sendDiscardedItemFeedbackNotification;${menuItemId}`);
             console.log(`Notification to all Employees Sent Successfully`);
-            this.adminMenu();
+            this.client.write(`LogUserActivity;${userId};'Sent Notification about getting feedback for Discarded Menu Item with ID: ${menuItemId}'`);
+            this.adminMenu(userId);
             // const name = await this.askQuestion('What didn’t you like about <Food Item> ');
             // const priceStr = await this.askQuestion('Enter item price: ');
             // const price = parseFloat(priceStr);
@@ -222,7 +228,7 @@ class RoleBasedMenu {
             // After collecting feedback, prompt for next action or exit
         });
     }
-    chefMenu() {
+    chefMenu(userId) {
         return __awaiter(this, void 0, void 0, function* () {
             console.log('\n');
             console.log("Menu For Chefs:");
@@ -239,7 +245,7 @@ class RoleBasedMenu {
                         yield this.getRecommendedItems();
                         break;
                     case '2':
-                        yield this.rollOutMenu();
+                        yield this.rollOutMenu(userId);
                         break;
                     case '3':
                         yield this.updateFinalMenu();
@@ -255,17 +261,17 @@ class RoleBasedMenu {
                     case '6':
                         // this.client.end();
                         // this.rl.close();
-                        this.logout();
+                        this.logout(userId);
                         break;
                     default:
                         console.log("Invalid option");
-                        this.chefMenu();
+                        this.chefMenu(userId);
                         break;
                 }
             }
             catch (error) {
                 console.error(`Chef menu error: ${error}`);
-                this.chefMenu();
+                this.chefMenu(userId);
             }
         });
     }
@@ -278,7 +284,7 @@ class RoleBasedMenu {
             // this.chefMenu();
         });
     }
-    rollOutMenu() {
+    rollOutMenu(userId) {
         return __awaiter(this, void 0, void 0, function* () {
             console.log("Rolling out menu...");
             const mealTypes = ['breakfast', 'lunch', 'dinner'];
@@ -296,7 +302,8 @@ class RoleBasedMenu {
             const command = `chef_rollOutMenu;${today};${JSON.stringify(selectedItems)}`;
             this.client.write(command);
             console.log("Menu rolled out.");
-            this.chefMenu();
+            this.client.write(`LogUserActivity;${userId};'Rolled Out Menu Items for Today To Employees'`);
+            this.chefMenu(userId);
         });
     }
     updateFinalMenu() {
@@ -315,41 +322,42 @@ class RoleBasedMenu {
             this.client.write(command);
         });
     }
-    displayMenuForDiscardedItemsForChef() {
+    displayMenuForDiscardedItemsForChef(userId) {
         return __awaiter(this, void 0, void 0, function* () {
             console.log("\nWhat would you like to do next?");
             console.log("1. Remove the Food Item from Menu List (Should be done once a month)");
             console.log("2.  Get Detailed Feedback (Should be done once a month)");
             const choice = yield this.askQuestion('Enter your choice (1 or 2): ');
-            this.handleChoiceForChef(choice);
+            this.handleChoiceForChef(choice, userId);
         });
     }
-    handleChoiceForChef(choice) {
+    handleChoiceForChef(choice, userId) {
         return __awaiter(this, void 0, void 0, function* () {
             if (choice === '1') {
                 const menuItemIdStr = yield this.askQuestion("\nEnter the menu item id to remove from menu: ");
                 const menuItemId = parseInt(menuItemIdStr);
-                yield this.removeFoodItemFromMenuByChef(menuItemId);
+                yield this.removeFoodItemFromMenuByChef(menuItemId, userId);
             }
             else if (choice === '2') {
                 const menuItemIdStr = yield this.askQuestion("\nEnter the Menu item Id of which the detailed feedback is needed: ");
                 const menuItemId = parseInt(menuItemIdStr);
-                yield this.sendFeedbackNotificationFromChef(menuItemId);
+                yield this.sendFeedbackNotificationFromChef(menuItemId, userId);
             }
             else {
                 console.log("Invalid choice. Please enter 1 or 2.");
-                yield this.displayMenuForDiscardedItemsForChef();
+                yield this.displayMenuForDiscardedItemsForChef(userId);
             }
         });
     }
     // Function to remove food item from menu
-    removeFoodItemFromMenuByChef(menuItemId) {
+    removeFoodItemFromMenuByChef(menuItemId, userId) {
         return __awaiter(this, void 0, void 0, function* () {
             // console.log(`Removing ${itemName} from the menu...`);
             console.log(`Sending request to remove menu item ID ${menuItemId} from the menu...`);
             this.client.write(`chef_removeMenuItem;${menuItemId}`);
             console.log(`Menu Item with Menu Item Id: ${menuItemId} is removed successfully`);
-            this.chefMenu();
+            this.client.write(`LogUserActivity;${userId};'Removed Discarded Menu Item with ID: ${menuItemId}'`);
+            this.chefMenu(userId);
             // Implement the logic to remove the food item from the menu
             // For example, call a repository function to remove the item from the database
             // await this.menuItemRepository.removeByName(itemName);
@@ -357,12 +365,13 @@ class RoleBasedMenu {
         });
     }
     // Function to get detailed feedback
-    sendFeedbackNotificationFromChef(menuItemId) {
+    sendFeedbackNotificationFromChef(menuItemId, userId) {
         return __awaiter(this, void 0, void 0, function* () {
             console.log(`Sending Notification to  all the employees For Giving Detailed Feedback.....`);
             this.client.write(`chef_sendDiscardedItemFeedbackNotification;${menuItemId}`);
             console.log(`Notification to all Employees Sent Successfully`);
-            this.chefMenu();
+            this.client.write(`LogUserActivity;${userId};'Sent Notification about getting feedback for Discarded Menu Item with ID: ${menuItemId}'`);
+            this.chefMenu(userId);
             // const name = await this.askQuestion('What didn’t you like about <Food Item> ');
             // const priceStr = await this.askQuestion('Enter item price: ');
             // const price = parseFloat(priceStr);
@@ -413,7 +422,7 @@ class RoleBasedMenu {
                         this.updateEmployeeProfile(userId);
                         break;
                     case '7':
-                        this.logout();
+                        this.logout(userId);
                         break;
                     default:
                         console.log("Invalid option");
@@ -438,6 +447,7 @@ class RoleBasedMenu {
             const command = `employee_giveFeedback;${userId};${menuItemId};${rating};${comment};${today}`;
             this.client.write(command);
             console.log("Feedback submitted.");
+            this.client.write(`LogUserActivity;${userId};'Employee submitted feedback for menu Item with ID: ${menuItemId}'`);
             this.employeeMenu(userId);
         });
     }
@@ -615,6 +625,7 @@ class RoleBasedMenu {
                 console.log("Votes submitted for items - Breakfast:", breakfastItemId, ", Lunch:", lunchItemId, ", Dinner:", dinnerItemId);
                 // Send votes to the server
                 this.client.write(`employee_markNotificationAsSeen_updateVotedItem;${notificationId};${breakfastItemId};${lunchItemId};${dinnerItemId};${userId}`);
+                this.client.write(`LogUserActivity;${userId};'Viewed rolled Out Menu and Voted for Today's menu'`);
                 // Return to the employee menu
                 this.employeeMenu(userId);
             }
@@ -654,6 +665,7 @@ class RoleBasedMenu {
                 const command = `employee_markNotificationAsSeen_sendDiscardedItemFeedbackToServer;${userId};${notificationId};${dislikes};${desiredTaste};${momRecipe};${menuItemId}`;
                 console.log("Feedback is submitted successfully. Thanks For giving your feedback");
                 this.client.write(command);
+                this.client.write(`LogUserActivity;${userId};'Feedback about Discarded Item with ID: ${menuItemId} is submitted.'`);
                 this.employeeMenu(userId);
             }
             catch (error) {
@@ -674,6 +686,7 @@ class RoleBasedMenu {
                 const command = `employee_updateEmployeeProfile;${userId};${dietaryPreference};${spiceLevel};${cuisinePreference};${sweetTooth}`;
                 this.client.write(command);
                 console.log("Employee Profile Updated Successfully");
+                this.client.write(`LogUserActivity;${userId};'Employee Profile is updated'`);
                 this.employeeMenu(userId);
             }
             catch (error) {

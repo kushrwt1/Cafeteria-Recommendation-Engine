@@ -10,6 +10,7 @@ export class UserActivityRepository {
             VALUES (?, ?)
         `;
         await db.execute(query, [userActivity.user_id, userActivity.activity_type]);
+        console.log(`User activity: ${userActivity.activity_type} for User Id : ${userActivity.user_id} is logged.`);
     }
 
     public async getActivitiesByUserId(userId: number): Promise<UserActivity[]> {

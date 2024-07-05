@@ -82,11 +82,9 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const net_1 = __importDefault(require("net"));
 const readline_1 = __importDefault(require("readline"));
 const roleBasedMenu_1 = require("../Features/RoleBasedMenus/roleBasedMenu");
-const userActivityservice_1 = require("../Services/userActivityservice");
 class Client {
     constructor() {
         this.connectToServer();
-        this.userActivityService = new userActivityservice_1.UserActivityService();
     }
     connectToServer() {
         this.client = net_1.default.createConnection({ port: 3000 }, () => {
@@ -108,6 +106,7 @@ class Client {
             if (message.includes('LOGIN_SUCCESS')) {
                 const [_, role, userIdStr, username] = message.split(' ');
                 const userId = parseInt(userIdStr, 10);
+                this.userIdFromServer = userId;
                 console.log('\n=========================================================================================');
                 console.log(`Welcome ${username}`);
                 console.log('=========================================================================================');
@@ -121,7 +120,8 @@ class Client {
                 const [command, menuItemsStr] = message.split(';');
                 const menuItems = JSON.parse(menuItemsStr);
                 console.table(menuItems);
-                this.roleBasedMenuObject.adminMenu();
+                this.client.write(`LogUserActivity;${this.userIdFromServer};'Viewed All Menu Items'`);
+                this.roleBasedMenuObject.adminMenu(this.userIdFromServer);
             }
             else if (message.includes('Response_getRecommendedItems')) {
                 const [command, recommendedItemsStr] = message.split(';');
@@ -153,25 +153,29 @@ class Client {
                     }
                 });
                 console.log('=========================================================================================');
-                this.roleBasedMenuObject.chefMenu();
+                this.client.write(`LogUserActivity;${this.userIdFromServer};'Viewed All Recommended Menu Items'`);
+                this.roleBasedMenuObject.chefMenu(this.userIdFromServer);
             }
             else if (message.includes('Response_Chef_viewAllMenuItems')) {
                 const [command, menuItemsStr] = message.split(';');
                 const menuItems = JSON.parse(menuItemsStr);
                 console.table(menuItems);
-                this.roleBasedMenuObject.chefMenu();
+                this.client.write(`LogUserActivity;${this.userIdFromServer};'Viewed All Menu Items'`);
+                this.roleBasedMenuObject.chefMenu(this.userIdFromServer);
             }
             else if (message.includes('Response_employee_viewAllMenuItems')) {
                 const [command, menuItemsStr, userIdStr] = message.split(';');
                 const menuItems = JSON.parse(menuItemsStr);
                 const userId = parseInt(userIdStr);
                 console.table(menuItems);
+                this.client.write(`LogUserActivity;${this.userIdFromServer};'Viewed All Menu Items'`);
                 this.roleBasedMenuObject.employeeMenu(userId);
             }
             else if (message.includes('Response_viewNotifications')) {
                 const [command, notificationsStr, userIdStr] = message.split(';');
                 const notifications = JSON.parse(notificationsStr);
                 const userId = parseInt(userIdStr);
+                this.client.write(`LogUserActivity;${this.userIdFromServer};'Viewed Notification'`);
                 this.roleBasedMenuObject.handleNotificationsResponseFromServer(notifications, userId);
                 // console.log(menuItems);
                 // this.roleBasedMenuObject.chefMenu();
@@ -208,7 +212,8 @@ class Client {
                     const date = new Date(dateString);
                     return date.toISOString().split('T')[0];
                 }
-                this.roleBasedMenuObject.displayMenuForDiscardedItems();
+                this.client.write(`LogUserActivity;${this.userIdFromServer};'Viewed All Discarded Menu Items'`);
+                this.roleBasedMenuObject.displayMenuForDiscardedItems(this.userIdFromServer);
             }
             else if (message.includes('Response_chef_viewDiscardedMenuItems')) {
                 const [command, discardedMenuItemsStr] = message.split(';');
@@ -230,7 +235,8 @@ class Client {
                     const date = new Date(dateString);
                     return date.toISOString().split('T')[0];
                 }
-                this.roleBasedMenuObject.displayMenuForDiscardedItemsForChef();
+                this.client.write(`LogUserActivity;${this.userIdFromServer};'Viewed All Discarded Menu Items'`);
+                this.roleBasedMenuObject.displayMenuForDiscardedItemsForChef(this.userIdFromServer);
             }
             else if (message.includes('ERROR')) {
                 console.error(message);
@@ -263,7 +269,9 @@ class Client {
             }
         });
     }
-    logout() {
+    logout(userId) {
+        this.client.write(`LogUserActivity;${userId};'Logged Out'`);
+        // this.userActivityService.logActivity(userId, 'Logged Out');
         this.client.end();
         this.rl.close();
         console.log('Logged out. Please wait while reconnecting...');
