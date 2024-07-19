@@ -14,33 +14,53 @@ const database_1 = require("../../Database/database");
 class MenuItemRepository {
     getAllMenuItems() {
         return __awaiter(this, void 0, void 0, function* () {
-            const [rows] = yield database_1.db.execute('SELECT * FROM Menu_Items');
+            const [rows] = yield database_1.db.execute("SELECT * FROM Menu_Items");
             return rows;
         });
     }
     getMenuItemById(menu_item_id) {
         return __awaiter(this, void 0, void 0, function* () {
-            const [rows] = yield database_1.db.execute('SELECT * FROM Menu_Items WHERE menu_item_id = ?', [menu_item_id]);
+            const [rows] = yield database_1.db.execute("SELECT * FROM Menu_Items WHERE menu_item_id = ?", [menu_item_id]);
             const menuItems = rows;
             return menuItems.length > 0 ? menuItems[0] : null;
         });
     }
     addMenuItem(menuItem, socket) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield database_1.db.execute('INSERT INTO Menu_Items (name, availability, price, meal_type_id, dietary_type, spice_level, cuisine_type, is_sweet) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', [menuItem.name, menuItem.availability, menuItem.price, menuItem.meal_type_id, menuItem.dietary_type, menuItem.spice_level, menuItem.cuisine_type, menuItem.is_sweet]);
-            socket.write("Menu Item Added Successfully");
+            yield database_1.db.execute("INSERT INTO Menu_Items (name, availability, price, meal_type_id, dietary_type, spice_level, cuisine_type, is_sweet) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [
+                menuItem.name,
+                menuItem.availability,
+                menuItem.price,
+                menuItem.meal_type_id,
+                menuItem.dietary_type,
+                menuItem.spice_level,
+                menuItem.cuisine_type,
+                menuItem.is_sweet,
+            ]);
             console.log("Menu Item added successfully");
         });
     }
     updateMenuItem(menuItem) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield database_1.db.execute('UPDATE Menu_Items SET name = ?, availability = ?, price = ?, meal_type_id = ?, dietary_type = ?, spice_level = ?, cuisine_type = ?, is_sweet = ? WHERE menu_item_id = ?', [menuItem.name, menuItem.availability, menuItem.price, menuItem.meal_type_id, menuItem.dietary_type, menuItem.spice_level, menuItem.cuisine_type, menuItem.is_sweet, menuItem.menu_item_id]);
+            yield database_1.db.execute("UPDATE Menu_Items SET name = ?, availability = ?, price = ?, meal_type_id = ?, dietary_type = ?, spice_level = ?, cuisine_type = ?, is_sweet = ? WHERE menu_item_id = ?", [
+                menuItem.name,
+                menuItem.availability,
+                menuItem.price,
+                menuItem.meal_type_id,
+                menuItem.dietary_type,
+                menuItem.spice_level,
+                menuItem.cuisine_type,
+                menuItem.is_sweet,
+                menuItem.menu_item_id,
+            ]);
             console.log("Menu Item updated successfully");
         });
     }
     deleteMenuItem(menu_item_id) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield database_1.db.execute('DELETE FROM Menu_Items WHERE menu_item_id = ?', [menu_item_id]);
+            yield database_1.db.execute("DELETE FROM Menu_Items WHERE menu_item_id = ?", [
+                menu_item_id,
+            ]);
             console.log(`Menu Item with Menu Item Id: ${menu_item_id} is deleted from the database`);
         });
     }

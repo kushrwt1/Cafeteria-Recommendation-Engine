@@ -14,43 +14,38 @@ const database_1 = require("../../Database/database");
 class ChefDailyMenuRepository {
     addDailyMenu(dailyMenu) {
         return __awaiter(this, void 0, void 0, function* () {
-            const date = new Date(dailyMenu.date).toISOString().split('T')[0];
-            yield database_1.db.execute('INSERT INTO Chef_Daily_Menus (menu_item_id, date) VALUES (?, ?)', [dailyMenu.menu_item_id, dailyMenu.date]);
+            const date = new Date(dailyMenu.date).toISOString().split("T")[0];
+            yield database_1.db.execute("INSERT INTO Chef_Daily_Menus (menu_item_id, date) VALUES (?, ?)", [dailyMenu.menu_item_id, dailyMenu.date]);
         });
     }
     getAllDailyMenus() {
         return __awaiter(this, void 0, void 0, function* () {
-            const [rows] = yield database_1.db.execute('SELECT * FROM Chef_Daily_Menus');
+            const [rows] = yield database_1.db.execute("SELECT * FROM Chef_Daily_Menus");
             return rows;
         });
     }
     getDailyMenuById(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            const [rows] = yield database_1.db.execute('SELECT * FROM Chef_Daily_Menus WHERE id = ?', [id]);
+            const [rows] = yield database_1.db.execute("SELECT * FROM Chef_Daily_Menus WHERE id = ?", [id]);
             const dailyMenus = rows;
             return dailyMenus.length > 0 ? dailyMenus[0] : null;
         });
     }
     updateDailyMenu(dailyMenu) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield database_1.db.execute('UPDATE Chef_Daily_Menus SET menu_item_id = ?, date = ? WHERE id = ?', [dailyMenu.menu_item_id, dailyMenu.date, dailyMenu.id]);
+            yield database_1.db.execute("UPDATE Chef_Daily_Menus SET menu_item_id = ?, date = ? WHERE id = ?", [dailyMenu.menu_item_id, dailyMenu.date, dailyMenu.id]);
         });
     }
     deleteDailyMenu(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield database_1.db.execute('DELETE FROM Chef_Daily_Menus WHERE id = ?', [id]);
+            yield database_1.db.execute("DELETE FROM Chef_Daily_Menus WHERE id = ?", [id]);
         });
     }
     getTodaysRolledOutMenu() {
         return __awaiter(this, void 0, void 0, function* () {
             // Get today's date in YYYY-MM-DD format
-            const today = new Date().toISOString().split('T')[0];
-            // Query the database to get the menu for today's date
-            // const [rows] = await db.execute('SELECT * FROM Chef_Daily_Menus WHERE DATE(date) = ?', [today]);
-            const [rows] = yield database_1.db.execute('SELECT cdm.menu_item_id, cdm.date, mi.name, mi.meal_type_id FROM Chef_Daily_Menus cdm JOIN menu_items mi ON cdm.menu_item_id = mi.menu_item_id WHERE cdm.date = ?', [today]);
-            // Check if any menu is found
-            // return rows as ChefDailyMenus[];
-            // const rolledOutMenu = rows as ChefDailyMenus[];
+            const today = new Date().toISOString().split("T")[0];
+            const [rows] = yield database_1.db.execute("SELECT cdm.menu_item_id, cdm.date, mi.name, mi.meal_type_id FROM Chef_Daily_Menus cdm JOIN menu_items mi ON cdm.menu_item_id = mi.menu_item_id WHERE cdm.date = ?", [today]);
             const rolledOutMenu = rows;
             return rolledOutMenu.length > 0 ? rolledOutMenu : null;
         });

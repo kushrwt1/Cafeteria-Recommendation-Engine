@@ -18,6 +18,7 @@ const menuItemRepository_1 = require("../Utils/Database Repositories/menuItemRep
 const discardedFoodItemFeedbackRepository_1 = require("../Utils/Database Repositories/discardedFoodItemFeedbackRepository");
 const employeeProfileService_1 = require("../Services/employeeProfileService");
 const employeeProfileRepository_1 = require("../Utils/Database Repositories/employeeProfileRepository");
+const serverProtocol_1 = require("../Server/serverProtocol");
 class EmployeeController {
     constructor() {
         this.feedbackRepositoryObject = new feedbackRepository_1.FeedbackRepository();
@@ -38,7 +39,7 @@ class EmployeeController {
                     menu_item_id: menuItemId,
                     rating: rating,
                     comment: comment,
-                    date: date
+                    date: date,
                 };
                 yield this.feedbackRepositoryObject.addFeedback(feedback);
                 console.log("Feedback added successfully.");
@@ -51,14 +52,12 @@ class EmployeeController {
     getNotifications(socket, userId) {
         return __awaiter(this, void 0, void 0, function* () {
             const notifications = yield this.notificationServiceObject.getNotificationsByUserId(userId);
-            // socket.write(JSON.stringify(notifications));
-            socket.write(`Response_viewNotifications;${JSON.stringify(notifications)};${userId}`);
+            const notificationsInStringFormat = JSON.stringify(notifications);
+            serverProtocol_1.ServerProtocol.sendResponse(socket, "Response_viewNotifications", {}, { notificationsInStringFormat, userId }, "json");
         });
     }
     getRolledOutMenu(socket, notificationId, userId) {
         return __awaiter(this, void 0, void 0, function* () {
-            // const rolledOutMenu = await this.chefdailyMenuRepositoryObject.getTodaysRolledOutMenu();
-            // socket.write(`Response_rolledOutMenu;${JSON.stringify(rolledOutMenu)};${userId};${notificationId}`);
             try {
                 const rolledOutMenu = yield this.chefdailyMenuRepositoryObject.getTodaysRolledOutMenu();
                 const employeeProfile = yield this.employeeProfileRepositoryObject.getEmployeeProfileByUserId(userId);
@@ -103,13 +102,13 @@ class EmployeeController {
                                 return scoreComparison;
                             }
                             // Tie-breaking based on preferred attributes
-                            const preferredAttributesA = (a.dietary_type === 'Vegetarian' ? 1 : 0) +
-                                (a.spice_level === 'Medium' ? 1 : 0) +
-                                (a.cuisine_type === 'North Indian' ? 1 : 0) +
+                            const preferredAttributesA = (a.dietary_type === "Vegetarian" ? 1 : 0) +
+                                (a.spice_level === "Medium" ? 1 : 0) +
+                                (a.cuisine_type === "North Indian" ? 1 : 0) +
                                 (a.is_sweet ? 1 : 0);
-                            const preferredAttributesB = (b.dietary_type === 'Vegetarian' ? 1 : 0) +
-                                (b.spice_level === 'Medium' ? 1 : 0) +
-                                (b.cuisine_type === 'North Indian' ? 1 : 0) +
+                            const preferredAttributesB = (b.dietary_type === "Vegetarian" ? 1 : 0) +
+                                (b.spice_level === "Medium" ? 1 : 0) +
+                                (b.cuisine_type === "North Indian" ? 1 : 0) +
                                 (b.is_sweet ? 1 : 0);
                             if (preferredAttributesA !== preferredAttributesB) {
                                 return preferredAttributesB - preferredAttributesA;
@@ -118,12 +117,23 @@ class EmployeeController {
                             return a.price - b.price;
                         });
                     }
-                    // Send the sorted menu items to the client
-                    socket.write(`Response_rolledOutMenu;${JSON.stringify(detailedMenuItems)};${userId};${notificationId};${isEmployeeProfileExists}`);
+                    const detailedMenuItemsInStringFormat = JSON.stringify(detailedMenuItems);
+                    serverProtocol_1.ServerProtocol.sendResponse(socket, "Response_rolledOutMenu", {}, {
+                        detailedMenuItemsInStringFormat,
+                        userId,
+                        notificationId,
+                        isEmployeeProfileExists,
+                    }, "json");
                     console.log("Rolled Out Menu According To User preference is sent to Client Successfully");
                 }
                 else {
-                    socket.write(`Response_rolledOutMenu;${JSON.stringify(rolledOutMenu)};${userId};${notificationId};${isEmployeeProfileExists}`);
+                    const rolledOutMenuInStringFormat = JSON.stringify(rolledOutMenu);
+                    serverProtocol_1.ServerProtocol.sendResponse(socket, "Response_rolledOutMenu", {}, {
+                        rolledOutMenuInStringFormat,
+                        userId,
+                        notificationId,
+                        isEmployeeProfileExists,
+                    }, "json");
                     console.log("Rolled Out Menu Without User preference is sent to Client Successfully");
                 }
             }
@@ -139,24 +149,24 @@ class EmployeeController {
     }
     updateVotedItem(breakfastItemId, lunchItemId, dinnerItemId, userId) {
         return __awaiter(this, void 0, void 0, function* () {
-            const today = new Date().toISOString().split('T')[0];
+            const today = new Date().toISOString().split("T")[0];
             const userMenuSelectionForBreakfast = {
                 id: 0,
                 user_id: userId,
                 menu_item_id: breakfastItemId,
-                selection_date: today
+                selection_date: today,
             };
             const userMenuSelectionForLunch = {
                 id: 0,
                 user_id: userId,
                 menu_item_id: lunchItemId,
-                selection_date: today
+                selection_date: today,
             };
             const userMenuSelectionForDinner = {
                 id: 0,
                 user_id: userId,
                 menu_item_id: dinnerItemId,
-                selection_date: today
+                selection_date: today,
             };
             yield this.employeeMenuSelectionrepositoryObject.addEmployeeMenuSelection(userMenuSelectionForBreakfast);
             yield this.employeeMenuSelectionrepositoryObject.addEmployeeMenuSelection(userMenuSelectionForLunch);
@@ -173,7 +183,9 @@ class EmployeeController {
             try {
                 const menuItems = yield this.menuItemRepositoryObject.getAllMenuItems();
                 // console.log("Menu Items:", menuItems);
-                socket.write(`Response_employee_viewAllMenuItems;${JSON.stringify(menuItems)};${userId}`);
+                // socket.write(`Response_employee_viewAllMenuItems;${JSON.stringify(menuItems)};${userId}`);
+                const menuItemsInStringFormat = JSON.stringify(menuItems);
+                serverProtocol_1.ServerProtocol.sendResponse(socket, "Response_employee_viewAllMenuItems", {}, { menuItemsInStringFormat, userId }, "json");
             }
             catch (error) {
                 console.error(`Error fetching all menu item: ${error}`);
@@ -181,30 +193,28 @@ class EmployeeController {
         });
     }
     selectMenuItems() {
-        return __awaiter(this, void 0, void 0, function* () {
-        });
+        return __awaiter(this, void 0, void 0, function* () { });
     }
     sendSelectedMenuItems() {
-        return __awaiter(this, void 0, void 0, function* () {
-        });
+        return __awaiter(this, void 0, void 0, function* () { });
     }
     addDiscarededMenuItemFeedbackInDatabase(dislikes, desiredTaste, momRecipe, discardedMenuItemId) {
         return __awaiter(this, void 0, void 0, function* () {
-            const today = new Date().toISOString().split('T')[0];
+            const today = new Date().toISOString().split("T")[0];
             const discardedFoodItemFeedback = {
                 id: 0,
                 menu_item_id: discardedMenuItemId,
                 dislikes: dislikes,
                 desired_taste: desiredTaste,
                 mom_recipe: momRecipe,
-                feedback_date: today
+                feedback_date: today,
             };
             yield this.discardedFoodItemFeedbackRepositoryObject.addFeedback(discardedFoodItemFeedback);
         });
     }
     updateEmployeeProfile(userId, dietaryPreference, spiceLevel, cuisinePreference, sweetTooth) {
         return __awaiter(this, void 0, void 0, function* () {
-            const today = new Date().toISOString().split('T')[0];
+            const today = new Date().toISOString().split("T")[0];
             const profile = {
                 id: 0,
                 user_id: userId,
@@ -212,13 +222,13 @@ class EmployeeController {
                 spice_level: spiceLevel,
                 cuisine_preference: cuisinePreference,
                 sweet_tooth: sweetTooth,
-                profile_update_date: today
+                profile_update_date: today,
             };
             try {
                 yield this.employeeProfileServiceObject.updateEmployeeProfile(profile);
             }
             catch (error) {
-                console.error('Error updating profile:', error);
+                console.error("Error updating profile:", error);
             }
         });
     }

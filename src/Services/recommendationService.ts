@@ -45,14 +45,6 @@ export class RecommendationService {
             // Sort by composite score
             compositeScores.sort((a, b) => b.compositeScore - a.compositeScore);
 
-            // Fetch menu item details for top-rated items
-            // const recommendedItems = [];
-            // for (const item of compositeScores) {
-            //     const menuItem = await this.menuItemRepositoryObject.getMenuItemById(item.menu_item_id);
-            //     recommendedItems.push({ ...menuItem, compositeScore: item.compositeScore });
-            // }
-            // return recommendedItems;
-
             // Fetch menu item details for top-rated items and categorize them by meal type
             const recommendedItemsByMealType: { [key: number]: MealTypeItems } = {
                 1: { mealType: 'Breakfast', items: [] },

@@ -14,30 +14,37 @@ const database_1 = require("../../Database/database");
 class MealTypeRepository {
     getAllMealTypes() {
         return __awaiter(this, void 0, void 0, function* () {
-            const [rows] = yield database_1.db.execute('SELECT * FROM Meal_Types');
+            const [rows] = yield database_1.db.execute("SELECT * FROM Meal_Types");
             return rows;
         });
     }
     getMealTypeById(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            const [rows] = yield database_1.db.execute('SELECT * FROM Meal_Types WHERE id = ?', [id]);
+            const [rows] = yield database_1.db.execute("SELECT * FROM Meal_Types WHERE id = ?", [
+                id,
+            ]);
             const mealTypes = rows;
             return mealTypes.length > 0 ? mealTypes[0] : null;
         });
     }
     addMealType(mealType) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield database_1.db.execute('INSERT INTO Meal_Types (meal_name) VALUES (?)', [mealType.meal_name]);
+            yield database_1.db.execute("INSERT INTO Meal_Types (meal_name) VALUES (?)", [
+                mealType.meal_name,
+            ]);
         });
     }
     updateMealType(mealType) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield database_1.db.execute('UPDATE Meal_Types SET meal_name = ? WHERE id = ?', [mealType.meal_name, mealType.id]);
+            yield database_1.db.execute("UPDATE Meal_Types SET meal_name = ? WHERE id = ?", [
+                mealType.meal_name,
+                mealType.id,
+            ]);
         });
     }
     deleteMealType(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield database_1.db.execute('DELETE FROM Meal_Types WHERE id = ?', [id]);
+            yield database_1.db.execute("DELETE FROM Meal_Types WHERE id = ?", [id]);
         });
     }
 }

@@ -20,36 +20,34 @@ class ChefHandler {
         const chefController = new chefController_1.ChefController();
         let response;
         switch (command) {
-            case 'chef_getRecommendedItems':
+            case "chef_getRecommendedItems":
                 chefController.getRecommendedItems(socket);
-                // const recommendedItems = await chefController.getRecommendedItems();
                 break;
-            case 'chef_rollOutMenu':
-                const [dateStr, selectedItemsStr] = params;
-                const date = new Date(dateStr).toISOString().split('T')[0];
-                const selectedItems = JSON.parse(selectedItemsStr);
+            case "chef_rollOutMenu":
+                const { today, selectedItemsInStringFormat } = JSON.parse(params);
+                const selectedItems = JSON.parse(selectedItemsInStringFormat);
                 for (const { mealType, menuItemId } of selectedItems) {
-                    chefController.rollOutMenu(date, menuItemId);
+                    chefController.rollOutMenu(today, menuItemId);
                 }
-                const today = new Date().toISOString().split('T')[0];
-                this.notificationService.addNotificationForAllUsers("See Rolled Out Menu and Vote For an Item", today);
+                const todaysDate = new Date().toISOString().split("T")[0];
+                this.notificationService.addNotificationForAllUsers("See Rolled Out Menu and Vote For an Item", todaysDate);
                 break;
-            case 'chef_viewAllMenuItem':
+            case "chef_viewAllMenuItem":
                 chefController.viewAllMenuItems(socket);
                 break;
-            case 'chef_viewDiscardedMenuItems':
+            case "chef_viewDiscardedMenuItems":
                 (() => __awaiter(this, void 0, void 0, function* () {
                     yield chefController.addDiscarededMenuItemsInDatabase();
                     chefController.sendAllDiscardedMenuItemsToClient(socket);
                 }))();
                 break;
-            case 'chef_removeMenuItem':
-                const foodItemId = parseInt(params[0]);
+            case "chef_removeMenuItem":
+                const { foodItemId } = JSON.parse(params);
                 chefController.deleteMenuItem(foodItemId);
                 break;
-            case 'chef_sendDiscardedItemFeedbackNotification':
-                const menuItemIdToGetFeedback = parseInt(params[0]);
-                const todayDate = new Date().toISOString().split('T')[0];
+            case "chef_sendDiscardedItemFeedbackNotification":
+                const { menuItemIdToGetFeedback } = JSON.parse(params);
+                const todayDate = new Date().toISOString().split("T")[0];
                 (() => __awaiter(this, void 0, void 0, function* () {
                     const menuItem = yield chefController.getMenuItemById(menuItemIdToGetFeedback);
                     if (menuItem != null) {
@@ -59,7 +57,7 @@ class ChefHandler {
                 }))();
                 break;
             default:
-                response = 'Unknown admin command';
+                response = "Unknown admin command";
                 break;
         }
         // socket.write(response + '\n');

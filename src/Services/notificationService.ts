@@ -1,5 +1,3 @@
-// services/notificationService.ts
-import { db } from '../Database/database'; // Adjust the path as needed
 import { NotificationRepository } from '../Utils/Database Repositories/notificationRepository';
 
 export class NotificationService {

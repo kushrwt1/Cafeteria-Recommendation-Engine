@@ -20,47 +20,56 @@ class AdminHandler {
         const adminController = new adminController_1.AdminController();
         let response;
         switch (command) {
-            case 'admin_addMenuItem':
-                const [nameStr, priceStr, availabilityStr, mealTypeIdStr, dietary_type, spice_level, cuisine_type, isSweetStr] = params;
-                const name = nameStr.toString();
-                const price = parseFloat(priceStr);
-                const availability = availabilityStr === 'true';
-                const meal_type_id = parseInt(mealTypeIdStr);
-                const is_sweet = isSweetStr === 'true';
-                adminController.addMenuItem({ menu_item_id: 0, name, availability, price, meal_type_id, dietary_type, spice_level, cuisine_type, is_sweet }, socket);
+            case "admin_addMenuItem":
+                const { name, price, availability, mealTypeId, dietaryType, spiceLevel, cuisineType, isSweet, } = JSON.parse(params);
+                adminController.addMenuItem({
+                    menu_item_id: 0,
+                    name,
+                    availability,
+                    price,
+                    meal_type_id: mealTypeId,
+                    dietary_type: dietaryType,
+                    spice_level: spiceLevel,
+                    cuisine_type: cuisineType,
+                    is_sweet: isSweet,
+                }, socket);
+                const todaysDate = new Date().toISOString().split("T")[0];
+                this.notificationService.addNotificationForAllUsers(`Menu item is added with name: ${name}`, todaysDate);
                 break;
-            case 'admin_updateMenuItem':
-                const [menuItemIdStr, newNameStr, newPriceStr, newAvailabilityStr, newMealTypeIdStr, newDietaryType, newSpiceLevel, newCuisineType, newIsSweetStr] = params;
-                const menuItemId = parseInt(menuItemIdStr);
-                const newName = newNameStr.toString();
-                const newPrice = parseFloat(newPriceStr);
-                const newAvailability = newAvailabilityStr === 'true';
-                const newMealTypeId = parseInt(newMealTypeIdStr);
-                const newIsSweet = newIsSweetStr === 'true';
-                adminController.updateMenuItem({ menu_item_id: menuItemId, name: newName, availability: newAvailability, price: newPrice, meal_type_id: newMealTypeId, dietary_type: newDietaryType, spice_level: newSpiceLevel, cuisine_type: newCuisineType, is_sweet: newIsSweet });
+            case "admin_updateMenuItem":
+                const { menuItemId, newName, newPrice, newAvailability, newMealTypeId, newDietaryType, newSpiceLevel, newCuisineType, newIsSweet, } = JSON.parse(params);
+                adminController.updateMenuItem({
+                    menu_item_id: menuItemId,
+                    name: newName,
+                    availability: newAvailability,
+                    price: newPrice,
+                    meal_type_id: newMealTypeId,
+                    dietary_type: newDietaryType,
+                    spice_level: newSpiceLevel,
+                    cuisine_type: newCuisineType,
+                    is_sweet: newIsSweet,
+                });
                 break;
-            case 'admin_deleteMenuItem':
-                const [menuItemIdToDeleteStr] = params;
-                const menuItemIdToDelete = parseInt(menuItemIdToDeleteStr);
+            case "admin_deleteMenuItem":
+                const { menuItemIdToDelete } = JSON.parse(params);
                 adminController.deleteMenuItem(menuItemIdToDelete);
                 break;
-            case 'admin_viewAllMenuItem':
+            case "admin_viewAllMenuItem":
                 adminController.viewAllMenuItems(socket);
-                // socket.write(`Response_viewAllMenuItems;${menuItems}`);
                 break;
-            case 'admin_viewDiscardedMenuItems':
+            case "admin_viewDiscardedMenuItems":
                 (() => __awaiter(this, void 0, void 0, function* () {
                     yield adminController.addDiscarededMenuItemsInDatabase();
                     adminController.sendAllDiscardedMenuItemsToClient(socket);
                 }))();
                 break;
-            case 'admin_removeMenuItem':
-                const foodItemId = parseInt(params[0]);
+            case "admin_removeMenuItem":
+                const { foodItemId } = JSON.parse(params);
                 adminController.deleteMenuItem(foodItemId);
                 break;
-            case 'admin_sendDiscardedItemFeedbackNotification':
-                const menuItemIdToGetFeedback = parseInt(params[0]);
-                const today = new Date().toISOString().split('T')[0];
+            case "admin_sendDiscardedItemFeedbackNotification":
+                const { menuItemIdToGetFeedback } = JSON.parse(params);
+                const today = new Date().toISOString().split("T")[0];
                 (() => __awaiter(this, void 0, void 0, function* () {
                     const menuItem = yield adminController.getMenuItemById(menuItemIdToGetFeedback);
                     if (menuItem != null) {
@@ -70,7 +79,7 @@ class AdminHandler {
                 }))();
                 break;
             default:
-                response = 'Unknown admin command';
+                response = "Unknown admin command";
                 break;
         }
         // socket.write(response + '\n');

@@ -1,10 +1,4 @@
 "use strict";
-// import net from 'net';
-// import readline from 'readline';
-// import { RoleBasedMenu, showMenu } from '../Features/RoleBasedMenus/roleBasedMenu';
-// import { AdminController } from '../Controllers/adminController';
-// import { ChefController } from '../Controllers/chefController';
-// import { UserController } from '../Controllers/employeeController';
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -18,70 +12,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-// const client = net.createConnection({ port: 3000 }, () => {
-//     console.log('Connected to server');
-//     login();
-// });
-// const rl = readline.createInterface({
-//     input: process.stdin,
-//     output: process.stdout,
-//     prompt: 'COMMAND> '
-// });
-// const roleBasedMenu = new RoleBasedMenu(client, rl);
-// client.on('data', (data) => {
-//     const message = data.toString().trim();
-//     if (message.includes('LOGIN_SUCCESS')) {
-//         const [_, role, userIdStr] = message.split(' ');
-//         const userId = parseInt(userIdStr, 10);
-//         showMenu(role, userId, client, rl);
-//     } else if (message.includes('Response_viewAllMenuItems')) {
-//         const [command, menuItemsStr] = message.split(';');
-//         const menuItems = JSON.parse(menuItemsStr);
-//         console.log(menuItems);
-//         roleBasedMenu.adminMenu();
-//     } else if (message.includes('Response_getRecommendedItems')) {
-//         const [command, recommendedItemsStr] = message.split(';');
-//         const recommendedItems = JSON.parse(recommendedItemsStr);
-//         console.log('Recommended Items for Next Day Menu:');
-//         // console.log(recommendedItems);
-//         recommendedItems.forEach((item: { menu_item_id: any; name: any; averageRating: number; }) => {
-//             console.log(`ID: ${item.menu_item_id}, Name: ${item.name}, Average Rating: ${item.averageRating.toFixed(2)}`);
-//         });
-//         roleBasedMenu.chefMenu();
-//     } else if (message.includes('Response_Chef_viewAllMenuItems')) {
-//         const [command, menuItemsStr] = message.split(';');
-//         const menuItems = JSON.parse(menuItemsStr);
-//         console.log(menuItems);
-//         roleBasedMenu.chefMenu();
-//     } else if (message.includes('ERROR')) {
-//         console.error(message);
-//         client.end();
-//     } else {
-//         rl.prompt();
-//     }
-// });
-// client.on('end', () => {
-//     console.log('Disconnected from server');
-//     rl.close();
-// });
-// client.on('error', (err) => {
-//     console.error(`Client error: ${err.message}`);
-// });
-// function askQuestion(question: string): Promise<string> {
-//     return new Promise((resolve) => rl.question(question, resolve));
-// }
-// async function login() {
-//     try {
-//         const username = await askQuestion('Enter username: ');
-//         const password = await askQuestion('Enter password: ');
-//         client.write(`LOGIN;${username};${password}`);
-//     } catch (error) {
-//         console.error(`Login error: ${error}`);
-//     }
-// }
 const net_1 = __importDefault(require("net"));
 const readline_1 = __importDefault(require("readline"));
 const roleBasedMenu_1 = require("../Features/RoleBasedMenus/roleBasedMenu");
+const clientProtocol_1 = require("./clientProtocol");
+const adminResponseHandler_1 = require("./adminResponseHandler");
+const chefResponseHandler_1 = require("./chefResponseHandler");
+const employeeResponseHandler_1 = require("./employeeResponseHandler");
 class Client {
     constructor() {
         this.connectToServer();
@@ -98,153 +35,16 @@ class Client {
             prompt: 'COMMAND> '
         });
         this.roleBasedMenuObject = new roleBasedMenu_1.RoleBasedMenu(this.client, this.rl, this.logout.bind(this));
+        this.adminResponseHandlerObject = new adminResponseHandler_1.AdminResponseHandler(this.client, this.rl, this.logout.bind(this));
+        this.chefResponseHandlerObject = new chefResponseHandler_1.ChefResponseHandler(this.client, this.rl, this.logout.bind(this));
+        this.employeeResponseHandlerObject = new employeeResponseHandler_1.EmployeeResponseHandler(this.client, this.rl, this.logout.bind(this));
         this.setupClient();
     }
     setupClient() {
         this.client.on('data', (data) => {
             const message = data.toString().trim();
-            if (message.includes('LOGIN_SUCCESS')) {
-                const [_, role, userIdStr, username] = message.split(' ');
-                const userId = parseInt(userIdStr, 10);
-                this.userIdFromServer = userId;
-                console.log('\n=========================================================================================');
-                console.log(`Welcome ${username}`);
-                console.log('=========================================================================================');
-                (0, roleBasedMenu_1.showMenu)(role, userId, this.client, this.rl, this.logout.bind(this));
-            }
-            else if (message.includes('ERROR Invalid credentials')) {
-                console.log("\nYour Credentials are invalid. Please enter the valid credentials: ");
-                this.login();
-            }
-            else if (message.includes('Response_viewAllMenuItems')) {
-                const [command, menuItemsStr] = message.split(';');
-                const menuItems = JSON.parse(menuItemsStr);
-                console.table(menuItems);
-                this.client.write(`LogUserActivity;${this.userIdFromServer};'Viewed All Menu Items'`);
-                this.roleBasedMenuObject.adminMenu(this.userIdFromServer);
-            }
-            else if (message.includes('Response_getRecommendedItems')) {
-                const [command, recommendedItemsStr] = message.split(';');
-                const recommendedItems = JSON.parse(recommendedItemsStr);
-                // recommendedItems.forEach((item: { menu_item_id: any; name: any; meal_type_id: any; compositeScore: number; }) => {
-                //     console.log(`ID: ${item.menu_item_id}, Name: ${item.name}, Average Rating: ${item.compositeScore.toFixed(2)}`);
-                // });
-                console.log('Recommended Items for Next Day Menu:');
-                console.log('=========================================================================================');
-                const recommendedItemsByMealType = {
-                    1: { mealType: 'Breakfast', items: [] },
-                    2: { mealType: 'Lunch', items: [] },
-                    3: { mealType: 'Dinner', items: [] }
-                };
-                // Categorize items by meal_type_id
-                recommendedItems.forEach((item) => {
-                    if (recommendedItemsByMealType[item.meal_type_id]) {
-                        recommendedItemsByMealType[item.meal_type_id].items.push(item);
-                    }
-                });
-                // console.table(recommendedItems);
-                // Print categorized items
-                Object.values(recommendedItemsByMealType).forEach(meal => {
-                    if (meal.items.length > 0) {
-                        console.log(`${meal.mealType}:`);
-                        meal.items.forEach((item) => {
-                            console.log(`  ID: ${item.menu_item_id}, Name: ${item.name}, Average Rating: ${item.compositeScore.toFixed(2)}`);
-                        });
-                    }
-                });
-                console.log('=========================================================================================');
-                this.client.write(`LogUserActivity;${this.userIdFromServer};'Viewed All Recommended Menu Items'`);
-                this.roleBasedMenuObject.chefMenu(this.userIdFromServer);
-            }
-            else if (message.includes('Response_Chef_viewAllMenuItems')) {
-                const [command, menuItemsStr] = message.split(';');
-                const menuItems = JSON.parse(menuItemsStr);
-                console.table(menuItems);
-                this.client.write(`LogUserActivity;${this.userIdFromServer};'Viewed All Menu Items'`);
-                this.roleBasedMenuObject.chefMenu(this.userIdFromServer);
-            }
-            else if (message.includes('Response_employee_viewAllMenuItems')) {
-                const [command, menuItemsStr, userIdStr] = message.split(';');
-                const menuItems = JSON.parse(menuItemsStr);
-                const userId = parseInt(userIdStr);
-                console.table(menuItems);
-                this.client.write(`LogUserActivity;${this.userIdFromServer};'Viewed All Menu Items'`);
-                this.roleBasedMenuObject.employeeMenu(userId);
-            }
-            else if (message.includes('Response_viewNotifications')) {
-                const [command, notificationsStr, userIdStr] = message.split(';');
-                const notifications = JSON.parse(notificationsStr);
-                const userId = parseInt(userIdStr);
-                this.client.write(`LogUserActivity;${this.userIdFromServer};'Viewed Notification'`);
-                this.roleBasedMenuObject.handleNotificationsResponseFromServer(notifications, userId);
-                // console.log(menuItems);
-                // this.roleBasedMenuObject.chefMenu();
-                // this.roleBasedMenuObject.employeeMenu(userId);
-            }
-            else if (message.includes('Response_rolledOutMenu')) {
-                const [command, rolledOutMenuStr, userIdStr, notificationIdStr, isEmployeeProfileExists] = message.split(';');
-                const rolledOutMenu = JSON.parse(rolledOutMenuStr);
-                const userId = parseInt(userIdStr);
-                const notificationId = parseInt(notificationIdStr);
-                this.roleBasedMenuObject.viewRolledOutMenuNotification(rolledOutMenu, userId, notificationId, isEmployeeProfileExists);
-                // console.log(menuItems);
-                // this.roleBasedMenuObject.chefMenu();
-                // this.roleBasedMenuObject.employeeMenu(userId);
-            }
-            else if (message.includes('Response_admin_viewDiscardedMenuItems')) {
-                const [command, discardedMenuItemsStr] = message.split(';');
-                const discardedMenuItems = JSON.parse(discardedMenuItemsStr);
-                // console.table(discardedMenuItems);
-                console.log("\nDiscarded Menu Items Are:");
-                console.log('=========================================================================================');
-                if (discardedMenuItems.length === 0) {
-                    console.log("No discarded menu items.");
-                }
-                else {
-                    console.log('ID\tMenu Item ID\tDiscarded Date\tName');
-                    // Print each item
-                    discardedMenuItems.forEach(item => {
-                        console.log(`${item.id}\t${item.menu_item_id}\t\t${formatDate(item.discarded_date)}\t${item.name}`);
-                    });
-                }
-                console.log('=========================================================================================');
-                function formatDate(dateString) {
-                    const date = new Date(dateString);
-                    return date.toISOString().split('T')[0];
-                }
-                this.client.write(`LogUserActivity;${this.userIdFromServer};'Viewed All Discarded Menu Items'`);
-                this.roleBasedMenuObject.displayMenuForDiscardedItems(this.userIdFromServer);
-            }
-            else if (message.includes('Response_chef_viewDiscardedMenuItems')) {
-                const [command, discardedMenuItemsStr] = message.split(';');
-                const discardedMenuItems = JSON.parse(discardedMenuItemsStr);
-                console.log("\nDiscarded Menu Items Are:");
-                console.log('=========================================================================================');
-                if (discardedMenuItems.length === 0) {
-                    console.log("No discarded menu items.");
-                }
-                else {
-                    console.log('ID\tMenu Item ID\tDiscarded Date\tName');
-                    // Print each item
-                    discardedMenuItems.forEach(item => {
-                        console.log(`${item.id}\t${item.menu_item_id}\t\t${formatDate(item.discarded_date)}\t${item.name}`);
-                    });
-                }
-                console.log('=========================================================================================');
-                function formatDate(dateString) {
-                    const date = new Date(dateString);
-                    return date.toISOString().split('T')[0];
-                }
-                this.client.write(`LogUserActivity;${this.userIdFromServer};'Viewed All Discarded Menu Items'`);
-                this.roleBasedMenuObject.displayMenuForDiscardedItemsForChef(this.userIdFromServer);
-            }
-            else if (message.includes('ERROR')) {
-                console.error(message);
-                this.client.end();
-            }
-            else {
-                this.rl.prompt();
-            }
+            const { command, headers, body } = clientProtocol_1.ClientProtocol.decodeRequest(message);
+            this.handlResponses(command, body);
         });
         this.client.on('end', () => {
             console.log('Disconnected from server');
@@ -257,21 +57,68 @@ class Client {
     askQuestion(question) {
         return new Promise((resolve) => this.rl.question(question, resolve));
     }
+    handlResponses(command, body) {
+        if (command === 'LOGIN_SUCCESS') {
+            this.handleLoginResponse(body);
+        }
+        else if (command === 'ERROR Invalid credentials') {
+            console.log("\nYour Credentials are invalid. Please enter the valid credentials: ");
+            this.login();
+        }
+        else if (command === 'Response_viewAllMenuItems') {
+            this.adminResponseHandlerObject.handleViewAllMenuItemsResponse(body, this.userIdFromServer);
+        }
+        else if (command === 'Response_getRecommendedItems') {
+            this.chefResponseHandlerObject.handleGetRecommendedItemsResponse(body, this.userIdFromServer);
+        }
+        else if (command === 'Response_Chef_viewAllMenuItems') {
+            this.chefResponseHandlerObject.handleViewAllMenuItemsResponse(body, this.userIdFromServer);
+        }
+        else if (command === 'Response_employee_viewAllMenuItems') {
+            this.employeeResponseHandlerObject.handleViewAllMenuItemsResponse(body, this.userIdFromServer);
+        }
+        else if (command === 'Response_viewNotifications') {
+            this.employeeResponseHandlerObject.handleViewNotificationsResponse(body, this.userIdFromServer);
+        }
+        else if (command === 'Response_rolledOutMenu') {
+            this.employeeResponseHandlerObject.handleRolledOutMenuResponse(body, this.userIdFromServer);
+        }
+        else if (command === 'Response_admin_viewDiscardedMenuItems') {
+            this.adminResponseHandlerObject.handleViewDiscardedMenuItemsResponse(body, this.userIdFromServer);
+        }
+        else if (command === 'Response_chef_viewDiscardedMenuItems') {
+            this.chefResponseHandlerObject.handleViewDiscardedMenuItemsResponse(body, this.userIdFromServer);
+        }
+        else if (command.includes('ERROR')) {
+            console.error(command);
+            this.client.end();
+        }
+        else {
+            this.rl.prompt();
+        }
+    }
     login() {
         return __awaiter(this, void 0, void 0, function* () {
             try {
                 const username = yield this.askQuestion('Enter username: ');
                 const password = yield this.askQuestion('Enter password: ');
-                this.client.write(`LOGIN;${username};${password}`);
+                clientProtocol_1.ClientProtocol.sendRequest(this.client, 'LOGIN', {}, { username, password }, 'json');
             }
             catch (error) {
                 console.error(`Login error: ${error}`);
             }
         });
     }
+    handleLoginResponse(body) {
+        const { role, userId, username } = JSON.parse(body);
+        this.userIdFromServer = userId;
+        console.log('\n=========================================================================================');
+        console.log(`Welcome ${username}`);
+        console.log('=========================================================================================');
+        this.roleBasedMenuObject.showMenu(role, userId, this.client, this.rl, this.logout.bind(this));
+    }
     logout(userId) {
-        this.client.write(`LogUserActivity;${userId};'Logged Out'`);
-        // this.userActivityService.logActivity(userId, 'Logged Out');
+        clientProtocol_1.ClientProtocol.sendRequest(this.client, 'LogUserActivity', {}, { userId, message: 'Logged Out' }, 'json');
         this.client.end();
         this.rl.close();
         console.log('Logged out. Please wait while reconnecting...');

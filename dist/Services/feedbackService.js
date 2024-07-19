@@ -8,9 +8,6 @@ class FeedbackService {
         this.menuItemId = menuItemId;
         this.userId = userId;
     }
-    // public async setComment() {
-    //     const [rows] = await db.execute('SELECT * FROM users WHERE id = ? AND name = ?', [id, name]);
-    // }
     setRating() {
     }
 }

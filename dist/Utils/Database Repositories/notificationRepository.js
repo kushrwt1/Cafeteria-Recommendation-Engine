@@ -14,26 +14,31 @@ const database_1 = require("../../Database/database");
 class NotificationRepository {
     getAllNotifications() {
         return __awaiter(this, void 0, void 0, function* () {
-            const [rows] = yield database_1.db.execute('SELECT * FROM Notifications');
+            const [rows] = yield database_1.db.execute("SELECT * FROM Notifications");
             return rows;
         });
     }
     getNotificationById(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            const [rows] = yield database_1.db.execute('SELECT * FROM Notifications WHERE id = ?', [id]);
+            const [rows] = yield database_1.db.execute("SELECT * FROM Notifications WHERE id = ?", [id]);
             const notifications = rows;
             return notifications.length > 0 ? notifications[0] : null;
         });
     }
     getNotificationsByUserId(userId) {
         return __awaiter(this, void 0, void 0, function* () {
-            const [rows] = yield database_1.db.execute('SELECT * FROM notifications WHERE user_id = ? AND seen = false ORDER BY date DESC', [userId]);
+            const [rows] = yield database_1.db.execute("SELECT * FROM notifications WHERE user_id = ? AND seen = false ORDER BY date DESC", [userId]);
             return rows;
         });
     }
     addNotification(notification) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield database_1.db.execute('INSERT INTO notifications (user_id, message, date, seen) VALUES (?, ?, ?, ?)', [notification.user_id, notification.message, notification.date, notification.seen]);
+            yield database_1.db.execute("INSERT INTO notifications (user_id, message, date, seen) VALUES (?, ?, ?, ?)", [
+                notification.user_id,
+                notification.message,
+                notification.date,
+                notification.seen,
+            ]);
         });
     }
     addNotificationForAllUsers(message, date) {
@@ -48,17 +53,21 @@ class NotificationRepository {
     }
     updateNotificationSeenStatus(notificationId) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield database_1.db.execute('UPDATE notifications SET seen = true WHERE id = ?', [notificationId]);
+            yield database_1.db.execute("UPDATE notifications SET seen = true WHERE id = ?", [
+                notificationId,
+            ]);
         });
     }
     deleteNotification(notificationId) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield database_1.db.execute('DELETE FROM notifications WHERE id = ?', [notificationId]);
+            yield database_1.db.execute("DELETE FROM notifications WHERE id = ?", [
+                notificationId,
+            ]);
         });
     }
     updateNotification(notification) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield database_1.db.execute('UPDATE Notifications SET message = ?, user_id = ? WHERE id = ?', [notification.message, notification.user_id, notification.id]);
+            yield database_1.db.execute("UPDATE Notifications SET message = ?, user_id = ? WHERE id = ?", [notification.message, notification.user_id, notification.id]);
         });
     }
 }

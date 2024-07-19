@@ -14,30 +14,37 @@ const database_1 = require("../../Database/database");
 class RoleRepository {
     getAllRoles() {
         return __awaiter(this, void 0, void 0, function* () {
-            const [rows] = yield database_1.db.execute('SELECT * FROM Roles');
+            const [rows] = yield database_1.db.execute("SELECT * FROM Roles");
             return rows;
         });
     }
     getRoleById(role_id) {
         return __awaiter(this, void 0, void 0, function* () {
-            const [rows] = yield database_1.db.execute('SELECT * FROM Roles WHERE role_id = ?', [role_id]);
+            const [rows] = yield database_1.db.execute("SELECT * FROM Roles WHERE role_id = ?", [
+                role_id,
+            ]);
             const roles = rows;
             return roles.length > 0 ? roles[0] : null;
         });
     }
     addRole(role) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield database_1.db.execute('INSERT INTO Roles (role_name) VALUES (?)', [role.role_name]);
+            yield database_1.db.execute("INSERT INTO Roles (role_name) VALUES (?)", [
+                role.role_name,
+            ]);
         });
     }
     updateRole(role) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield database_1.db.execute('UPDATE Roles SET role_name = ? WHERE role_id = ?', [role.role_name, role.role_id]);
+            yield database_1.db.execute("UPDATE Roles SET role_name = ? WHERE role_id = ?", [
+                role.role_name,
+                role.role_id,
+            ]);
         });
     }
     deleteRole(role_id) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield database_1.db.execute('DELETE FROM Roles WHERE role_id = ?', [role_id]);
+            yield database_1.db.execute("DELETE FROM Roles WHERE role_id = ?", [role_id]);
         });
     }
 }
