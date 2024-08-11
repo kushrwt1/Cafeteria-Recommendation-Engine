@@ -49,293 +49,336 @@ export class AdminMenuOperations {
           await this.addMenuItem(userId);
           break;
         case "2":
-          this.updateMenuItem(userId);
+          await this.updateMenuItem(userId);
           break;
         case "3":
-          this.deleteMenuItem(userId);
+          await this.deleteMenuItem(userId);
           break;
         case "4":
-          this.viewAllMenuItems(userId);
+          await this.viewAllMenuItems(userId);
           break;
         case "5":
-          this.viewDiscardedMenuItemsForAdmin(userId);
+          await this.viewDiscardedMenuItemsForAdmin(userId);
           break;
         case "6":
           this.logout(userId);
           break;
         default:
           console.log("Invalid option");
-          this.adminMenu(userId);
+          await this.adminMenu(userId);
           break;
       }
     } catch (error) {
       console.error(`Admin menu error: ${error}`);
-      this.adminMenu(userId);
+      await this.adminMenu(userId);
     }
   }
 
   public async addMenuItem(userId: number) {
-    const name = await this.askQuestion("Enter item name: ");
-    const priceStr = await this.askQuestion("Enter item price: ");
-    const price = parseFloat(priceStr);
-    const availabilityStr = await this.askQuestion(
-      "Is the item available? (yes/no): "
-    );
-    const availability = availabilityStr.toLowerCase() === "yes";
-    const mealTypeIdStr = await this.askQuestion(
-      "Enter Meal Type Id(1 for breakfast, 2 For lunch, 3 for dinner) : "
-    );
-    const mealTypeId = parseInt(mealTypeIdStr);
+    try {
+      const name = await this.askQuestion("Enter item name: ");
+      const priceStr = await this.askQuestion("Enter item price: ");
+      const price = parseFloat(priceStr);
+      const availabilityStr = await this.askQuestion(
+        "Is the item available? (yes/no): "
+      );
+      const availability = availabilityStr.toLowerCase() === "yes";
+      const mealTypeIdStr = await this.askQuestion(
+        "Enter Meal Type Id(1 for breakfast, 2 For lunch, 3 for dinner) : "
+      );
+      const mealTypeId = parseInt(mealTypeIdStr);
 
-    const dietaryType = await this.askAndValidate.call(
-      this,
-      "Enter Dietary Type of this food item (Vegetarian/Non Vegetarian/Eggetarian): ",
-      ["Vegetarian", "Non Vegetarian", "Eggetarian"]
-    );
-    const spiceLevel = await this.askAndValidate.call(
-      this,
-      "Enter Spice Level of this food item (High/Medium/Low): ",
-      ["High", "Medium", "Low"]
-    );
-    const cuisineType = await this.askAndValidate.call(
-      this,
-      "Enter Cuisine Type of this food item (North Indian/South Indian/Other): ",
-      ["North Indian", "South Indian", "Other"]
-    );
-    const isSweetStr = await this.askQuestion(
-      "Is the item is sweet? (yes/no): "
-    );
-    const isSweet = isSweetStr.toLowerCase() === "yes";
+      const dietaryType = await this.askAndValidate.call(
+        this,
+        "Enter Dietary Type of this food item (Vegetarian/Non Vegetarian/Eggetarian): ",
+        ["Vegetarian", "Non Vegetarian", "Eggetarian"]
+      );
+      const spiceLevel = await this.askAndValidate.call(
+        this,
+        "Enter Spice Level of this food item (High/Medium/Low): ",
+        ["High", "Medium", "Low"]
+      );
+      const cuisineType = await this.askAndValidate.call(
+        this,
+        "Enter Cuisine Type of this food item (North Indian/South Indian/Other): ",
+        ["North Indian", "South Indian", "Other"]
+      );
+      const isSweetStr = await this.askQuestion(
+        "Is the item is sweet? (yes/no): "
+      );
+      const isSweet = isSweetStr.toLowerCase() === "yes";
 
-    ClientProtocol.sendRequest(
-      this.client,
-      "admin_addMenuItem",
-      {},
-      {
-        name,
-        price,
-        availability,
-        mealTypeId,
-        dietaryType,
-        spiceLevel,
-        cuisineType,
-        isSweet,
-      },
-      "json"
-    );
+      ClientProtocol.sendRequest(
+        this.client,
+        "admin_addMenuItem",
+        {},
+        {
+          name,
+          price,
+          availability,
+          mealTypeId,
+          dietaryType,
+          spiceLevel,
+          cuisineType,
+          isSweet,
+        },
+        "json"
+      );
 
-    console.log("\nMenu Item added to Database successfully");
+      console.log("\nMenu Item added to Database successfully");
 
-    ClientProtocol.sendRequest(
-      this.client,
-      "LogUserActivity",
-      {},
-      { userId, message: `Added Menu Item with name: ${name}` },
-      "json"
-    );
+      ClientProtocol.sendRequest(
+        this.client,
+        "LogUserActivity",
+        {},
+        { userId, message: `Added Menu Item with name: ${name}` },
+        "json"
+      );
 
-    this.adminMenu(userId);
+      await this.adminMenu(userId);
+    } catch (error) {
+      console.error(`Error adding menu item: ${error}`);
+      await this.adminMenu(userId);
+    }
   }
 
   public async updateMenuItem(userId: number) {
-    const menuItemIdStr = await this.askQuestion("Enter Menu item ID: ");
-    const menuItemId = parseInt(menuItemIdStr);
-    const newName = await this.askQuestion("Enter new name of this item: ");
-    const priceStr = await this.askQuestion("Enter new price of this item: ");
-    const newPrice = parseFloat(priceStr);
-    const availabilityStr = await this.askQuestion(
-      "Is the item available? (yes/no): "
-    );
-    const newAvailability = availabilityStr.toLowerCase() === "yes";
-    const mealTypeIdStr = await this.askQuestion(
-      "Enter Meal Type Id(1 for breakfast, 2 For lunch, 3 for dinner) : "
-    );
-    const newMealTypeId = parseInt(mealTypeIdStr);
+    try {
+      const menuItemIdStr = await this.askQuestion("Enter Menu item ID: ");
+      const menuItemId = parseInt(menuItemIdStr);
+      const newName = await this.askQuestion("Enter new name of this item: ");
+      const priceStr = await this.askQuestion(
+        "Enter new price of this item: "
+      );
+      const newPrice = parseFloat(priceStr);
+      const availabilityStr = await this.askQuestion(
+        "Is the item available? (yes/no): "
+      );
+      const newAvailability = availabilityStr.toLowerCase() === "yes";
+      const mealTypeIdStr = await this.askQuestion(
+        "Enter Meal Type Id(1 for breakfast, 2 For lunch, 3 for dinner) : "
+      );
+      const newMealTypeId = parseInt(mealTypeIdStr);
 
-    const newDietaryType = await this.askAndValidate.call(
-      this,
-      "Enter Dietary Type of this food item (Vegetarian/Non Vegetarian/Eggetarian): ",
-      ["Vegetarian", "Non Vegetarian", "Eggetarian"]
-    );
-    const newSpiceLevel = await this.askAndValidate.call(
-      this,
-      "Enter Spice Level of this food item (High/Medium/Low): ",
-      ["High", "Medium", "Low"]
-    );
-    const newCuisineType = await this.askAndValidate.call(
-      this,
-      "Enter Cuisine Type of this food item (North Indian/South Indian/Other): ",
-      ["North Indian", "South Indian", "Other"]
-    );
-    const isSweetStr = await this.askQuestion(
-      "Is the item is sweet? (Yes/No): "
-    );
-    const newIsSweet = isSweetStr.toLowerCase() === "yes";
+      const newDietaryType = await this.askAndValidate.call(
+        this,
+        "Enter Dietary Type of this food item (Vegetarian/Non Vegetarian/Eggetarian): ",
+        ["Vegetarian", "Non Vegetarian", "Eggetarian"]
+      );
+      const newSpiceLevel = await this.askAndValidate.call(
+        this,
+        "Enter Spice Level of this food item (High/Medium/Low): ",
+        ["High", "Medium", "Low"]
+      );
+      const newCuisineType = await this.askAndValidate.call(
+        this,
+        "Enter Cuisine Type of this food item (North Indian/South Indian/Other): ",
+        ["North Indian", "South Indian", "Other"]
+      );
+      const isSweetStr = await this.askQuestion(
+        "Is the item is sweet? (yes/no): "
+      );
+      const newIsSweet = isSweetStr.toLowerCase() === "yes";
 
-    ClientProtocol.sendRequest(
-      this.client,
-      "admin_updateMenuItem",
-      {},
-      {
-        menuItemId,
-        newName,
-        newPrice,
-        newAvailability,
-        newMealTypeId,
-        newDietaryType,
-        newSpiceLevel,
-        newCuisineType,
-        newIsSweet,
-      },
-      "json"
-    );
+      ClientProtocol.sendRequest(
+        this.client,
+        "admin_updateMenuItem",
+        {},
+        {
+          menuItemId,
+          newName,
+          newPrice,
+          newAvailability,
+          newMealTypeId,
+          newDietaryType,
+          newSpiceLevel,
+          newCuisineType,
+          newIsSweet,
+        },
+        "json"
+      );
 
-    console.log("\nMenu Item updated in Database successfully");
+      console.log("\nMenu Item updated in Database successfully");
 
-    ClientProtocol.sendRequest(
-      this.client,
-      "LogUserActivity",
-      {},
-      {
-        userId,
-        message: `Updated Menu Item with ID: ${menuItemId} and Name: ${newName}`,
-      },
-      "json"
-    );
+      ClientProtocol.sendRequest(
+        this.client,
+        "LogUserActivity",
+        {},
+        {
+          userId,
+          message: `Updated Menu Item with ID: ${menuItemId} and Name: ${newName}`,
+        },
+        "json"
+      );
 
-    this.adminMenu(userId);
+      await this.adminMenu(userId);
+    } catch (error) {
+      console.error(`Error updating menu item: ${error}`);
+      await this.adminMenu(userId);
+    }
   }
 
   public async deleteMenuItem(userId: number) {
-    const menuItemIdStr = await this.askQuestion("Enter item ID: ");
-    const menuItemIdToDelete = parseInt(menuItemIdStr);
+    try {
+      const menuItemIdStr = await this.askQuestion("Enter item ID: ");
+      const menuItemIdToDelete = parseInt(menuItemIdStr);
 
-    ClientProtocol.sendRequest(
-      this.client,
-      "admin_deleteMenuItem",
-      {},
-      { menuItemIdToDelete },
-      "json"
-    );
+      ClientProtocol.sendRequest(
+        this.client,
+        "admin_deleteMenuItem",
+        {},
+        { menuItemIdToDelete },
+        "json"
+      );
 
-    console.log("\nMenu Item Deleted from Database successfully");
+      console.log("\nMenu Item Deleted from Database successfully");
 
-    ClientProtocol.sendRequest(
-      this.client,
-      "LogUserActivity",
-      {},
-      { userId, message: `Deleted Menu Item with ID: ${menuItemIdToDelete}` },
-      "json"
-    );
+      ClientProtocol.sendRequest(
+        this.client,
+        "LogUserActivity",
+        {},
+        { userId, message: `Deleted Menu Item with ID: ${menuItemIdToDelete}` },
+        "json"
+      );
 
-    this.adminMenu(userId);
+      await this.adminMenu(userId);
+    } catch (error) {
+      console.error(`Error deleting menu item: ${error}`);
+      await this.adminMenu(userId);
+    }
   }
 
   public async viewAllMenuItems(userId: number) {
-    ClientProtocol.sendRequest(
-      this.client,
-      "admin_viewAllMenuItem",
-      {},
-      "No Payload Required",
-      "string"
-    );
+    try {
+      ClientProtocol.sendRequest(
+        this.client,
+        "admin_viewAllMenuItem",
+        {},
+        "No Payload Required",
+        "string"
+      );
+    } catch (error) {
+      console.error(`Error viewing all menu items: ${error}`);
+    }
   }
 
   public async viewDiscardedMenuItemsForAdmin(userId: number) {
-    ClientProtocol.sendRequest(
-      this.client,
-      "admin_viewDiscardedMenuItems",
-      {},
-      "No Payload Required",
-      "string"
-    );
+    try {
+      ClientProtocol.sendRequest(
+        this.client,
+        "admin_viewDiscardedMenuItems",
+        {},
+        "No Payload Required",
+        "string"
+      );
+    } catch (error) {
+      console.error(`Error viewing discarded menu items: ${error}`);
+    }
   }
 
   public async displayMenuForDiscardedItems(userId: number) {
-    console.log("\nWhat would you like to do next?");
-    console.log(
-      "1. Remove the Food Item from Menu List (Should be done once a month)"
-    );
-    console.log("2.  Get Detailed Feedback (Should be done once a month)");
-    const choice = await this.askQuestion("Enter your choice (1 or 2): ");
-    this.handleChoice(choice, userId);
+    try {
+      console.log("\nWhat would you like to do next?");
+      console.log(
+        "1. Remove the Food Item from Menu List (Should be done once a month)"
+      );
+      console.log("2. Get Detailed Feedback (Should be done once a month)");
+      const choice = await this.askQuestion("Enter your choice (1 or 2): ");
+      await this.handleChoice(choice, userId);
+    } catch (error) {
+      console.error(`Error displaying menu for discarded items: ${error}`);
+      await this.displayMenuForDiscardedItems(userId);
+    }
   }
 
   private async handleChoice(choice: string, userId: number) {
-    if (choice === "1") {
-      const menuItemIdStr = await this.askQuestion(
-        "\nEnter the menu item id to remove from menu: "
-      );
-      const menuItemId = parseInt(menuItemIdStr);
-      await this.removeFoodItemFromMenu(menuItemId, userId);
-    } else if (choice === "2") {
-      const menuItemIdStr = await this.askQuestion(
-        "\nEnter the Menu item Id of which we want the detailed feedback: "
-      );
-      const menuItemId = parseInt(menuItemIdStr);
-      await this.sendFeedbackNotification(menuItemId, userId);
-    } else {
-      console.log("Invalid choice. Please enter 1 or 2.");
+    try {
+      if (choice === "1") {
+        const menuItemIdStr = await this.askQuestion(
+          "\nEnter the menu item id to remove from menu: "
+        );
+        const menuItemId = parseInt(menuItemIdStr);
+        await this.removeFoodItemFromMenu(menuItemId, userId);
+      } else if (choice === "2") {
+        const menuItemIdStr = await this.askQuestion(
+          "\nEnter the Menu item Id of which we want the detailed feedback: "
+        );
+        const menuItemId = parseInt(menuItemIdStr);
+        await this.sendFeedbackNotification(menuItemId, userId);
+      } else {
+        console.log("Invalid choice. Please enter 1 or 2.");
+        await this.displayMenuForDiscardedItems(userId);
+      }
+    } catch (error) {
+      console.error(`Error handling choice: ${error}`);
       await this.displayMenuForDiscardedItems(userId);
     }
   }
 
   private async removeFoodItemFromMenu(menuItemId: number, userId: number) {
+    try {
+      const foodItemId = menuItemId;
+      console.log(
+        `Sending request to remove menu item ID ${foodItemId} from the menu...`
+      );
 
-    const foodItemId = menuItemId;
-    console.log(
-      `Sending request to remove menu item ID ${foodItemId} from the menu...`
-    );
+      ClientProtocol.sendRequest(
+        this.client,
+        "admin_removeMenuItem",
+        {},
+        { foodItemId },
+        "json"
+      );
 
-    ClientProtocol.sendRequest(
-      this.client,
-      "admin_removeMenuItem",
-      {},
-      { foodItemId },
-      "json"
-    );
+      console.log(
+        `Menu Item with Menu Item Id: ${foodItemId} is removed successfully`
+      );
 
-    console.log(
-      `Menu Item with Menu Item Id: ${foodItemId} is removed successfully`
-    );
+      ClientProtocol.sendRequest(
+        this.client,
+        "LogUserActivity",
+        {},
+        { userId, message: `Removed Discarded Menu Item with ID: ${menuItemId}` },
+        "json"
+      );
 
-    ClientProtocol.sendRequest(
-      this.client,
-      "LogUserActivity",
-      {},
-      { userId, message: `Removed Discarded Menu Item with ID: ${menuItemId}` },
-      "json"
-    );
-
-    this.adminMenu(userId);
+      await this.adminMenu(userId);
+    } catch (error) {
+      console.error(`Error removing food item from menu: ${error}`);
+      await this.adminMenu(userId);
+    }
   }
 
-  // Function to get detailed feedback
   private async sendFeedbackNotification(menuItemId: number, userId: number) {
-    console.log(`Sending Feedback Notification to  all the Employees`);
+    try {
+      console.log(`Sending Feedback Notification to all the Employees`);
 
-    const menuItemIdToGetFeedback = menuItemId;
-    ClientProtocol.sendRequest(
-      this.client,
-      "admin_sendDiscardedItemFeedbackNotification",
-      {},
-      { menuItemIdToGetFeedback },
-      "json"
-    );
+      const menuItemIdToGetFeedback = menuItemId;
+      ClientProtocol.sendRequest(
+        this.client,
+        "admin_sendDiscardedItemFeedbackNotification",
+        {},
+        { menuItemIdToGetFeedback },
+        "json"
+      );
 
-    console.log(`Notification to all Employees Sent Successfully`);
+      console.log(`Notification to all Employees Sent Successfully`);
 
-    ClientProtocol.sendRequest(
-      this.client,
-      "LogUserActivity",
-      {},
-      {
-        userId,
-        message: `Sent Notification about getting feedback for Discarded Menu Item with ID: ${menuItemIdToGetFeedback}`,
-      },
-      "json"
-    );
+      ClientProtocol.sendRequest(
+        this.client,
+        "LogUserActivity",
+        {},
+        {
+          userId,
+          message: `Sent Notification about getting feedback for Discarded Menu Item with ID: ${menuItemIdToGetFeedback}`,
+        },
+        "json"
+      );
 
-    this.adminMenu(userId);
+      await this.adminMenu(userId);
+    } catch (error) {
+      console.error(`Error sending feedback notification: ${error}`);
+      await this.adminMenu(userId);
+    }
   }
 }

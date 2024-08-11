@@ -20,59 +20,85 @@ export class AdminResponseHandler {
   }
 
   public handleViewAllMenuItemsResponse(body: any, userId: number) {
-    const { menuItemsInStringFormat } = JSON.parse(body);
-    const menuItems = JSON.parse(menuItemsInStringFormat);
-    console.table(menuItems);
-    ClientProtocol.sendRequest(
-      this.client,
-      "LogUserActivity",
-      {},
-      { userId: userId, message: "Viewed All Menu Items" },
-      "json"
-    );
+    try {
+      const { menuItemsInStringFormat } = JSON.parse(body);
+      const menuItems = JSON.parse(menuItemsInStringFormat);
+      console.table(menuItems);
 
-    this.adminMenuOperationsObject.adminMenu(userId);
+      ClientProtocol.sendRequest(
+        this.client,
+        "LogUserActivity",
+        {},
+        { userId: userId, message: "Viewed All Menu Items" },
+        "json"
+      );
+
+      this.adminMenuOperationsObject.adminMenu(userId);
+    } catch (error) {
+      console.error("Error handling View All Menu Items response:", error);
+      this.handleError(userId, "View All Menu Items");
+    }
   }
 
   public handleViewDiscardedMenuItemsResponse(body: any, userId: number) {
-    const { discardedMenuItemsInStringFormat } = JSON.parse(body);
+    try {
+      const { discardedMenuItemsInStringFormat } = JSON.parse(body);
+      const discardedMenuItems: DiscardedMenuItem[] = JSON.parse(
+        discardedMenuItemsInStringFormat
+      );
 
-    const discardedMenuItems: DiscardedMenuItem[] = JSON.parse(
-      discardedMenuItemsInStringFormat
-    );
-    console.log("\nDiscarded Menu Items Are:");
-    console.log(
-      "========================================================================================="
-    );
-    if (discardedMenuItems.length === 0) {
-      console.log("No discarded menu items.");
-    } else {
-      console.log("ID\tMenu Item ID\tDiscarded Date\tName");
-      // Print each item
-      discardedMenuItems.forEach((item) => {
-        console.log(
-          `${item.id}\t${item.menu_item_id}\t\t${formatDate(
-            item.discarded_date
-          )}\t${item.name}`
-        );
-      });
+      console.log("\nDiscarded Menu Items Are:");
+      console.log(
+        "========================================================================================="
+      );
+
+      if (discardedMenuItems.length === 0) {
+        console.log("No discarded menu items.");
+      } else {
+        console.log("ID\tMenu Item ID\tDiscarded Date\tName");
+
+        discardedMenuItems.forEach((item) => {
+          console.log(
+            `${item.id}\t${item.menu_item_id}\t\t${formatDate(
+              item.discarded_date
+            )}\t${item.name}`
+          );
+        });
+      }
+
+      console.log(
+        "========================================================================================="
+      );
+
+      ClientProtocol.sendRequest(
+        this.client,
+        "LogUserActivity",
+        {},
+        { userId: userId, message: "Viewed All Discarded Menu Items" },
+        "json"
+      );
+
+      this.adminMenuOperationsObject.displayMenuForDiscardedItems(userId);
+    } catch (error) {
+      console.error("Error handling View Discarded Menu Items response:", error);
+      this.handleError(userId, "View Discarded Menu Items");
     }
-    console.log(
-      "========================================================================================="
-    );
+
     function formatDate(dateString: any) {
       const date = new Date(dateString);
       return date.toISOString().split("T")[0];
     }
+  }
 
+  private handleError(userId: number, operation: string) {
+    console.error(`Operation "${operation}" failed for user ID ${userId}`);
     ClientProtocol.sendRequest(
       this.client,
       "LogUserActivity",
       {},
-      { userId: userId, message: "Viewed All Discarded Menu Items" },
+      { userId: userId, message: `Failed to ${operation}` },
       "json"
     );
-
-    this.adminMenuOperationsObject.displayMenuForDiscardedItems(userId);
+    this.adminMenuOperationsObject.adminMenu(userId);
   }
 }

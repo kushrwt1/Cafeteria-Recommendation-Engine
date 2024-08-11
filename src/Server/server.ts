@@ -32,33 +32,40 @@ class Server {
       socket.setEncoding("utf-8");
 
       socket.on("data", async (data) => {
-        const message = data.toString().trim();
-        const { command, headers, body } =
-          ServerProtocol.decodeRequest(message);
+        try {
+          const message = data.toString().trim();
+          const { command, headers, body } = ServerProtocol.decodeRequest(message);
 
-        if (command === "LOGIN") {
-          await this.authenticationService.authenticateLoginCredentials(
-            socket,
-            body
-          );
-        } else if (command.startsWith("admin")) {
-          const adminHandler = new AdminHandler();
-          adminHandler.handleAdmin(socket, command, body);
-        } else if (command.startsWith("chef")) {
-          const chefHandler = new ChefHandler();
-          chefHandler.handleChef(socket, command, body);
-        } else if (command.startsWith("employee")) {
-          const employeeHandler = new EmployeeHandler();
-          employeeHandler.handleEmployee(socket, command, body);
-        } else if (command === "LogUserActivity") {
-          const { userId, message: activityMessage } = JSON.parse(body);
-          this.userActivityService.logActivity(userId, activityMessage);
-        } else {
+          if (command === "LOGIN") {
+            await this.authenticationService.authenticateLoginCredentials(socket, body);
+          } else if (command.startsWith("admin")) {
+            const adminHandler = new AdminHandler();
+            adminHandler.handleAdmin(socket, command, body);
+          } else if (command.startsWith("chef")) {
+            const chefHandler = new ChefHandler();
+            chefHandler.handleChef(socket, command, body);
+          } else if (command.startsWith("employee")) {
+            const employeeHandler = new EmployeeHandler();
+            employeeHandler.handleEmployee(socket, command, body);
+          } else if (command === "LogUserActivity") {
+            const { userId, message: activityMessage } = JSON.parse(body);
+            this.userActivityService.logActivity(userId, activityMessage);
+          } else {
+            ServerProtocol.sendResponse(
+              socket,
+              "ERROR",
+              {},
+              "ERROR Unknown command\n",
+              "string"
+            );
+          }
+        } catch (error) {
+          console.error("Error handling data:", error);
           ServerProtocol.sendResponse(
             socket,
             "ERROR",
             {},
-            "ERROR Unknown command\n",
+            "ERROR Processing request\n",
             "string"
           );
         }

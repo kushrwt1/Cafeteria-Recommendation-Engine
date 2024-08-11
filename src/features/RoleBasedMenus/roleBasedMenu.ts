@@ -18,17 +18,26 @@ export class RoleBasedMenu {
     private rl: readline.Interface,
     private logout: (userId: number) => void
   ) {
-    this.adminMenuOperationsObject = new AdminMenuOperations(
-      client,
-      rl,
-      logout
-    );
-    this.chefMenuOperationsObject = new ChefMenuOperations(client, rl, logout);
-    this.employeeMenuOperationsObject = new EmployeeMenuOperations(
-      client,
-      rl,
-      logout
-    );
+    try {
+      this.adminMenuOperationsObject = new AdminMenuOperations(
+        client,
+        rl,
+        logout
+      );
+      this.chefMenuOperationsObject = new ChefMenuOperations(
+        client,
+        rl,
+        logout
+      );
+      this.employeeMenuOperationsObject = new EmployeeMenuOperations(
+        client,
+        rl,
+        logout
+      );
+    } catch (error) {
+      console.error(`Error during initialization: ${error}`);
+      client.end();
+    }
   }
 
   public showMenu(
@@ -38,19 +47,24 @@ export class RoleBasedMenu {
     rl: readline.Interface,
     logout: (userId: number) => void
   ) {
-    switch (role) {
-      case "admin":
-        this.adminMenuOperationsObject.adminMenu(userId);
-        break;
-      case "chef":
-        this.chefMenuOperationsObject.chefMenu(userId);
-        break;
-      case "employee":
-        this.employeeMenuOperationsObject.employeeMenu(userId);
-        break;
-      default:
-        console.error("Unknown role");
-        client.end();
+    try {
+      switch (role) {
+        case "admin":
+          this.adminMenuOperationsObject.adminMenu(userId);
+          break;
+        case "chef":
+          this.chefMenuOperationsObject.chefMenu(userId);
+          break;
+        case "employee":
+          this.employeeMenuOperationsObject.employeeMenu(userId);
+          break;
+        default:
+          console.error("Unknown role");
+          client.end();
+      }
+    } catch (error) {
+      console.error(`Error in showMenu: ${error}`);
+      client.end();
     }
   }
 }

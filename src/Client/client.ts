@@ -15,38 +15,45 @@ class Client {
     private chefResponseHandlerObject!: ChefResponseHandler;
     private employeeResponseHandlerObject!: EmployeeResponseHandler;
 
-
-
     constructor() {
-       this.connectToServer();
+        this.connectToServer();
     }
 
     private connectToServer() {
-        this.client = net.createConnection({ port: 3000 }, () => {
-            console.log('Connected to server');
-            console.log("\nEnter Your Credentials to Log In:");
-            this.login();
-        });
+        try {
+            this.client = net.createConnection({ port: 3000 }, () => {
+                console.log('Connected to server');
+                console.log("\nEnter Your Credentials to Log In:");
+                this.login();
+            });
 
-        this.rl = readline.createInterface({
-            input: process.stdin,
-            output: process.stdout,
-            prompt: 'COMMAND> '
-        });
+            this.rl = readline.createInterface({
+                input: process.stdin,
+                output: process.stdout,
+                prompt: 'COMMAND> '
+            });
 
-        this.roleBasedMenuObject = new RoleBasedMenu(this.client, this.rl, this.logout.bind(this));
-        this.adminResponseHandlerObject = new AdminResponseHandler(this.client, this.rl, this.logout.bind(this));
-        this.chefResponseHandlerObject = new ChefResponseHandler(this.client, this.rl, this.logout.bind(this));
-        this.employeeResponseHandlerObject = new EmployeeResponseHandler(this.client, this.rl, this.logout.bind(this));
+            this.roleBasedMenuObject = new RoleBasedMenu(this.client, this.rl, this.logout.bind(this));
+            this.adminResponseHandlerObject = new AdminResponseHandler(this.client, this.rl, this.logout.bind(this));
+            this.chefResponseHandlerObject = new ChefResponseHandler(this.client, this.rl, this.logout.bind(this));
+            this.employeeResponseHandlerObject = new EmployeeResponseHandler(this.client, this.rl, this.logout.bind(this));
 
-        this.setupClient();
+            this.setupClient();
+        } catch (error) {
+            console.error('Error connecting to server:', error);
+            this.retryConnection();
+        }
     }
 
     private setupClient() {
         this.client.on('data', (data) => {
-            const message = data.toString().trim();
-            const { command, headers, body } = ClientProtocol.decodeRequest(message);
-            this.handlResponses(command, body);
+            try {
+                const message = data.toString().trim();
+                const { command, headers, body } = ClientProtocol.decodeRequest(message);
+                this.handlResponses(command, body);
+            } catch (error) {
+                console.error('Error processing server data:', error);
+            }
         });
 
         this.client.on('end', () => {
@@ -56,6 +63,7 @@ class Client {
 
         this.client.on('error', (err) => {
             console.error(`Client error: ${err.message}`);
+            this.retryConnection();
         });
     }
 
@@ -64,43 +72,46 @@ class Client {
     }
 
     private handlResponses(command: string, body: any) {
-
-        if (command === 'LOGIN_SUCCESS') {
-            this.handleLoginResponse(body);
-        } 
-        else if(command === 'ERROR Invalid credentials') {
-            console.log("\nYour Credentials are invalid. Please enter the valid credentials: ");
-            this.login();
-        }
-        else if (command ==='Response_viewAllMenuItems') {
-            this.adminResponseHandlerObject.handleViewAllMenuItemsResponse(body, this.userIdFromServer);
-        } 
-        else if (command === 'Response_getRecommendedItems') {
-            this.chefResponseHandlerObject.handleGetRecommendedItemsResponse(body, this.userIdFromServer);
-        } 
-        else if (command === 'Response_Chef_viewAllMenuItems') {
-            this.chefResponseHandlerObject.handleViewAllMenuItemsResponse(body, this.userIdFromServer);
-        }
-        else if (command === 'Response_employee_viewAllMenuItems') {
-            this.employeeResponseHandlerObject.handleViewAllMenuItemsResponse(body, this.userIdFromServer)
-        }
-        else if (command === 'Response_viewNotifications') {
-            this.employeeResponseHandlerObject.handleViewNotificationsResponse(body, this.userIdFromServer);
-        } 
-        else if (command === 'Response_rolledOutMenu') {
-            this.employeeResponseHandlerObject.handleRolledOutMenuResponse(body, this.userIdFromServer);
-        } 
-        else if (command === 'Response_admin_viewDiscardedMenuItems') {
-            this.adminResponseHandlerObject.handleViewDiscardedMenuItemsResponse(body, this.userIdFromServer);
-        }
-        else if (command === 'Response_chef_viewDiscardedMenuItems') {
-            this.chefResponseHandlerObject.handleViewDiscardedMenuItemsResponse(body, this.userIdFromServer);
-        }
-        else if (command.includes('ERROR')) {
-            console.error(command);
-            this.client.end();
-        } else {
-            this.rl.prompt();
+        try {
+            if (command === 'LOGIN_SUCCESS') {
+                this.handleLoginResponse(body);
+            } 
+            else if (command === 'ERROR Invalid credentials') {
+                console.log("\nYour Credentials are invalid. Please enter the valid credentials: ");
+                this.login();
+            }
+            else if (command === 'Response_viewAllMenuItems') {
+                this.adminResponseHandlerObject.handleViewAllMenuItemsResponse(body, this.userIdFromServer);
+            } 
+            else if (command === 'Response_getRecommendedItems') {
+                this.chefResponseHandlerObject.handleGetRecommendedItemsResponse(body, this.userIdFromServer);
+            } 
+            else if (command === 'Response_Chef_viewAllMenuItems') {
+                this.chefResponseHandlerObject.handleViewAllMenuItemsResponse(body, this.userIdFromServer);
+            }
+            else if (command === 'Response_employee_viewAllMenuItems') {
+                this.employeeResponseHandlerObject.handleViewAllMenuItemsResponse(body, this.userIdFromServer);
+            }
+            else if (command === 'Response_viewNotifications') {
+                this.employeeResponseHandlerObject.handleViewNotificationsResponse(body, this.userIdFromServer);
+            } 
+            else if (command === 'Response_rolledOutMenu') {
+                this.employeeResponseHandlerObject.handleRolledOutMenuResponse(body, this.userIdFromServer);
+            } 
+            else if (command === 'Response_admin_viewDiscardedMenuItems') {
+                this.adminResponseHandlerObject.handleViewDiscardedMenuItemsResponse(body, this.userIdFromServer);
+            }
+            else if (command === 'Response_chef_viewDiscardedMenuItems') {
+                this.chefResponseHandlerObject.handleViewDiscardedMenuItemsResponse(body, this.userIdFromServer);
+            }
+            else if (command.includes('ERROR')) {
+                console.error(command);
+                this.client.end();
+            } else {
+                this.rl.prompt();
+            }
+        } catch (error) {
+            console.error('Error handling response:', error);
         }
     }
 
@@ -115,25 +126,38 @@ class Client {
     }
 
     private handleLoginResponse(body: any) {
-        const { role, userId, username } = JSON.parse(body);
-        this.userIdFromServer = userId;
-        console.log('\n=========================================================================================');
-        console.log(`Welcome ${username}`);
-        console.log('=========================================================================================');
-        this.roleBasedMenuObject.showMenu(role, userId, this.client, this.rl, this.logout.bind(this));
+        try {
+            const { role, userId, username } = JSON.parse(body);
+            this.userIdFromServer = userId;
+            console.log('\n=========================================================================================');
+            console.log(`Welcome ${username}`);
+            console.log('=========================================================================================');
+            this.roleBasedMenuObject.showMenu(role, userId, this.client, this.rl, this.logout.bind(this));
+        } catch (error) {
+            console.error('Error processing login response:', error);
+        }
     }
 
     private logout(userId: number) {
-        ClientProtocol.sendRequest(this.client, 'LogUserActivity', {}, { userId, message: 'Logged Out' }, 'json');
-        
-        this.client.end();
-        this.rl.close();
-        console.log('Logged out. Please wait while reconnecting...');
+        try {
+            ClientProtocol.sendRequest(this.client, 'LogUserActivity', {}, { userId, message: 'Logged Out' }, 'json');
+            this.client.end();
+            this.rl.close();
+            console.log('Logged out. Please wait while reconnecting...');
+            setTimeout(() => {
+                this.connectToServer();
+            }, 1000);
+        } catch (error) {
+            console.error('Error during logout:', error);
+        }
+    }
+
+    private retryConnection() {
+        console.log('Attempting to reconnect...');
         setTimeout(() => {
             this.connectToServer();
-        }, 1000);
+        }, 5000);
     }
 }
-
 
 const clientObject = new Client();
