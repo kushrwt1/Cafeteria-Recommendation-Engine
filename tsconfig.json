@@ -3,8 +3,8 @@
     /* Visit https://aka.ms/tsconfig to read more about this file */
 
     "target": "es2016",                                  /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */
-    "outDir": "",
-    "rootDir": "",
+    "outDir": "./dist",
+    "rootDir": "./src",
     /* Modules */
     "module": "commonjs",                                /* Specify what module code is generated. */
     "esModuleInterop": true,                             /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables 'allowSyntheticDefaultImports' for type compatibility. */
@@ -13,9 +13,8 @@
     "strict": true,                                      /* Enable all strict type-checking options. */
     "skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
   },
-  "include": [
-        ["src"]
-  ],
+  // "include": ["./src/*.ts"],
+  "include": ["src/**/*"],
   "exclude": [
         "./node_modules"
   ]
